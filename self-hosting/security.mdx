@@ -9,7 +9,7 @@ description: "Security best practices for your self-hosted prompts.chat deployme
 
 ## Authentication secret
 
-`AUTH_SECRET` is used by NextAuth.js to sign and verify session tokens. Without it, sessions are insecure and will be invalidated on every restart.
+`NEXTAUTH_SECRET` (also accepted as `AUTH_SECRET`) is used by NextAuth.js to sign and verify session tokens. Without it, sessions are insecure and will be invalidated on every restart.
 
 <Steps>
   <Step title="Generate a secure secret">
@@ -20,7 +20,7 @@ description: "Security best practices for your self-hosted prompts.chat deployme
 
   <Step title="Set it in your environment">
     ```bash .env
-    AUTH_SECRET="<output from above>"
+    NEXTAUTH_SECRET="<output from above>"
     ```
 
     For Docker:

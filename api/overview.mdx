@@ -102,3 +102,24 @@ Returns HTTP 503 with `status: "unhealthy"` if the database is unreachable.
 ```
 
 `mode` is `url` (link-only) or `s3` (direct upload). `supportsUpload` is `true` only when S3 is configured.
+
+## Improve prompt endpoint
+
+`POST /api/improve-prompt` uses AI to enhance a prompt. Requires authentication (session or API key).
+
+```bash
+curl -X POST https://prompts.chat/api/improve-prompt \
+  -H "Authorization: Bearer pchat_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Review this code for bugs",
+    "outputFormat": "text",
+    "outputType": "text"
+  }'
+```
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `prompt` | string | Yes | The prompt text to improve (max 10,000 chars) |
+| `outputFormat` | string | No | `text`, `structured_json`, or `structured_yaml` (default: `text`) |
+| `outputType` | string | No | `text`, `image`, `video`, or `sound` (default: `text`) |

@@ -48,7 +48,7 @@ prompts.chat supports five built-in authentication providers. You can enable any
 ## Required environment variable
 
 <Warning>
-  `AUTH_SECRET` must be set in every deployment. It is used to sign session tokens and cookies. Without it, authentication will not function correctly.
+  `NEXTAUTH_SECRET` (or the alias `AUTH_SECRET`) must be set in every deployment. It is used to sign session tokens and cookies. Without it, authentication will not function correctly.
 
   ```bash
   # Generate a secure random secret
@@ -65,7 +65,7 @@ prompts.chat supports five built-in authentication providers. You can enable any
     **Environment variables:**
 
     ```bash
-    AUTH_SECRET="your-random-secret"
+    NEXTAUTH_SECRET="your-random-secret"
     ```
 
     **Config:**
@@ -94,9 +94,9 @@ prompts.chat supports five built-in authentication providers. You can enable any
       </Step>
       <Step title="Set environment variables">
         ```bash
-        AUTH_SECRET="your-random-secret"
-        AUTH_GITHUB_ID="your-github-client-id"
-        AUTH_GITHUB_SECRET="your-github-client-secret"
+        NEXTAUTH_SECRET="your-random-secret"
+        GITHUB_CLIENT_ID="your-github-client-id"
+        GITHUB_CLIENT_SECRET="your-github-client-secret"
         ```
       </Step>
       <Step title="Enable in config">
@@ -124,9 +124,9 @@ prompts.chat supports five built-in authentication providers. You can enable any
       </Step>
       <Step title="Set environment variables">
         ```bash
-        AUTH_SECRET="your-random-secret"
-        AUTH_GOOGLE_ID="your-google-client-id"
-        AUTH_GOOGLE_SECRET="your-google-client-secret"
+        NEXTAUTH_SECRET="your-random-secret"
+        GOOGLE_CLIENT_ID="your-google-client-id"
+        GOOGLE_CLIENT_SECRET="your-google-client-secret"
         ```
       </Step>
       <Step title="Enable in config">
@@ -153,10 +153,10 @@ prompts.chat supports five built-in authentication providers. You can enable any
       </Step>
       <Step title="Set environment variables">
         ```bash
-        AUTH_SECRET="your-random-secret"
-        AUTH_AZURE_AD_CLIENT_ID="your-azure-client-id"
-        AUTH_AZURE_AD_CLIENT_SECRET="your-azure-client-secret"
-        AUTH_AZURE_AD_ISSUER="https://login.microsoftonline.com/your-tenant-id/v2.0"
+        NEXTAUTH_SECRET="your-random-secret"
+        AZURE_AD_CLIENT_ID="your-azure-client-id"
+        AZURE_AD_CLIENT_SECRET="your-azure-client-secret"
+        AZURE_AD_TENANT_ID="your-tenant-id"
         ```
 
         Replace `your-tenant-id` with the **Directory (tenant) ID** from step 1.
@@ -183,9 +183,16 @@ prompts.chat supports five built-in authentication providers. You can enable any
            ```
         4. Create a **Key** with the **Sign In with Apple** capability and download the `.p8` file
       </Step>
+      <Step title="Generate credentials with the auth CLI">
+        Run the interactive setup to generate Apple credentials:
+        ```bash
+        npx auth add apple
+        ```
+        Follow the prompts. This sets `AUTH_APPLE_ID` and `AUTH_APPLE_SECRET` for you.
+      </Step>
       <Step title="Set environment variables">
         ```bash
-        AUTH_SECRET="your-random-secret"
+        NEXTAUTH_SECRET="your-random-secret"
         AUTH_APPLE_ID="your-apple-services-id"
         AUTH_APPLE_SECRET="your-generated-client-secret"
         ```
@@ -232,10 +239,10 @@ docker run -d \
   -v prompts-data:/data \
   -e AUTH_SECRET="$(openssl rand -base64 32)" \
   -e PCHAT_AUTH_PROVIDERS="github,google" \
-  -e AUTH_GITHUB_ID="your-github-client-id" \
-  -e AUTH_GITHUB_SECRET="your-github-client-secret" \
-  -e AUTH_GOOGLE_ID="your-google-client-id" \
-  -e AUTH_GOOGLE_SECRET="your-google-client-secret" \
+  -e GITHUB_CLIENT_ID="your-github-client-id" \
+  -e GITHUB_CLIENT_SECRET="your-github-client-secret" \
+  -e GOOGLE_CLIENT_ID="your-google-client-id" \
+  -e GOOGLE_CLIENT_SECRET="your-google-client-secret" \
   ghcr.io/f/prompts.chat
 ```
 
@@ -243,13 +250,13 @@ docker run -d \
 
 | Variable | Provider | Required |
 |----------|----------|----------|
-| `AUTH_SECRET` | All | Yes |
-| `AUTH_GITHUB_ID` | GitHub | Yes |
-| `AUTH_GITHUB_SECRET` | GitHub | Yes |
-| `AUTH_GOOGLE_ID` | Google | Yes |
-| `AUTH_GOOGLE_SECRET` | Google | Yes |
-| `AUTH_AZURE_AD_CLIENT_ID` | Azure AD | Yes |
-| `AUTH_AZURE_AD_CLIENT_SECRET` | Azure AD | Yes |
-| `AUTH_AZURE_AD_ISSUER` | Azure AD | Yes |
+| `NEXTAUTH_SECRET` | All | Yes |
+| `GITHUB_CLIENT_ID` | GitHub | Yes |
+| `GITHUB_CLIENT_SECRET` | GitHub | Yes |
+| `GOOGLE_CLIENT_ID` | Google | Yes |
+| `GOOGLE_CLIENT_SECRET` | Google | Yes |
+| `AZURE_AD_CLIENT_ID` | Azure AD | Yes |
+| `AZURE_AD_CLIENT_SECRET` | Azure AD | Yes |
+| `AZURE_AD_TENANT_ID` | Azure AD | Yes |
 | `AUTH_APPLE_ID` | Apple | Yes |
 | `AUTH_APPLE_SECRET` | Apple | Yes |

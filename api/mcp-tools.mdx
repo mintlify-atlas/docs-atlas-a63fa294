@@ -138,11 +138,15 @@ Enhance a prompt using AI. Returns an improved version of the prompt text.
 ### Parameters
 
 <ParamField body="prompt" type="string" required>
-  The prompt text to improve.
+  The prompt text to improve (up to 10,000 characters).
 </ParamField>
 
-<ParamField body="instructions" type="string">
-  Optional instructions for how to improve the prompt, e.g. "make it more concise" or "add chain-of-thought steps".
+<ParamField body="outputFormat" type="string" default="text">
+  Desired output format for the improved prompt. One of `text`, `structured_json`, or `structured_yaml`.
+</ParamField>
+
+<ParamField body="outputType" type="string" default="text">
+  The intended output type of the prompt. One of `text`, `image`, `video`, or `sound`.
 </ParamField>
 
 ### Example response

@@ -87,6 +87,7 @@ You can compare any two versions using the **Compare versions** button on the pr
 ```bash
 # Submit a change request
 curl -X POST https://prompts.chat/api/prompts/<promptId>/changes \
+  -H "Authorization: Bearer pchat_your_api_key" \
   -H "Content-Type: application/json" \
   -d '{
     "proposedContent": "You are an expert software engineer...",
@@ -94,13 +95,25 @@ curl -X POST https://prompts.chat/api/prompts/<promptId>/changes \
     "reason": "More specific role description improves output quality"
   }'
 
-# Approve a change request
+# Approve a change request (prompt author only)
 curl -X PATCH https://prompts.chat/api/prompts/<promptId>/changes/<changeId> \
+  -H "Authorization: Bearer pchat_your_api_key" \
   -H "Content-Type: application/json" \
-  -d '{"action": "approve"}'
+  -d '{"status": "APPROVED"}'
 
-# Reject a change request
+# Reject a change request (prompt author only)
 curl -X PATCH https://prompts.chat/api/prompts/<promptId>/changes/<changeId> \
+  -H "Authorization: Bearer pchat_your_api_key" \
   -H "Content-Type: application/json" \
-  -d '{"action": "reject", "reviewNote": "The original wording is intentional."}'
+  -d '{"status": "REJECTED", "reviewNote": "The original wording is intentional."}'
+
+# Reopen a rejected change request (change request author only)
+curl -X PATCH https://prompts.chat/api/prompts/<promptId>/changes/<changeId> \
+  -H "Authorization: Bearer pchat_your_api_key" \
+  -H "Content-Type: application/json" \
+  -d '{"status": "PENDING"}'
+
+# Dismiss a pending change request (change request author only)
+curl -X DELETE https://prompts.chat/api/prompts/<promptId>/changes/<changeId> \
+  -H "Authorization: Bearer pchat_your_api_key"
 ```

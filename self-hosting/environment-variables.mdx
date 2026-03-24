@@ -43,52 +43,82 @@ These variables must be set for the application to start.
   <Warning>Always set this explicitly in production. If left unset, sessions will be invalidated on every restart.</Warning>
 </ParamField>
 
+## NextAuth
+
+<ParamField path="NEXTAUTH_URL" type="string">
+  The canonical URL of your deployment. Required in production.
+
+  ```bash
+  NEXTAUTH_URL="https://your-domain.com"
+  ```
+
+  Use `http://localhost:3000` for local development.
+</ParamField>
+
+<ParamField path="NEXTAUTH_SECRET" type="string" required>
+  Secret key used by NextAuth.js to sign session tokens and cookies. Same as `AUTH_SECRET` — set one or the other (NextAuth accepts both names).
+
+  ```bash
+  openssl rand -base64 32
+  ```
+</ParamField>
+
 ## OAuth providers
 
 At least one authentication provider must be configured in `prompts.config.ts`. Set the corresponding environment variables for each provider you enable.
 
 ### GitHub
 
-<ParamField path="AUTH_GITHUB_ID" type="string">
+<ParamField path="GITHUB_CLIENT_ID" type="string">
   GitHub OAuth application client ID. Create an OAuth app at
   [github.com/settings/developers](https://github.com/settings/developers).
 
   Set the callback URL to `https://your-domain.com/api/auth/callback/github`.
 </ParamField>
 
-<ParamField path="AUTH_GITHUB_SECRET" type="string">
+<ParamField path="GITHUB_CLIENT_SECRET" type="string">
   GitHub OAuth application client secret.
 </ParamField>
 
 ### Google
 
-<ParamField path="AUTH_GOOGLE_ID" type="string">
+<ParamField path="GOOGLE_CLIENT_ID" type="string">
   Google OAuth 2.0 client ID. Create credentials in the
   [Google Cloud Console](https://console.cloud.google.com/).
 
   Set the authorised redirect URI to `https://your-domain.com/api/auth/callback/google`.
 </ParamField>
 
-<ParamField path="AUTH_GOOGLE_SECRET" type="string">
+<ParamField path="GOOGLE_CLIENT_SECRET" type="string">
   Google OAuth 2.0 client secret.
 </ParamField>
 
 ### Microsoft Entra ID (Azure AD)
 
-<ParamField path="AUTH_AZURE_AD_CLIENT_ID" type="string">
+<ParamField path="AZURE_AD_CLIENT_ID" type="string">
   Azure AD application (client) ID.
 </ParamField>
 
-<ParamField path="AUTH_AZURE_AD_CLIENT_SECRET" type="string">
+<ParamField path="AZURE_AD_CLIENT_SECRET" type="string">
   Azure AD client secret value.
 </ParamField>
 
-<ParamField path="AUTH_AZURE_AD_ISSUER" type="string">
-  Azure AD issuer URL. Use the tenant-specific endpoint:
+<ParamField path="AZURE_AD_TENANT_ID" type="string">
+  Azure AD tenant ID. Used to construct the issuer URL:
 
   ```
   https://login.microsoftonline.com/<tenant-id>/v2.0
   ```
+</ParamField>
+
+### Apple
+
+<ParamField path="AUTH_APPLE_ID" type="string">
+  Apple Services ID. Run `npx auth add apple` for interactive setup guidance.
+</ParamField>
+
+<ParamField path="AUTH_APPLE_SECRET" type="string">
+  Apple client secret (a signed JWT). Run `npx auth add apple` to generate it.
 </ParamField>
 
 ## AI features
@@ -172,6 +202,34 @@ Required when file upload features are enabled. Set `ENABLED_STORAGE` to choose 
 <ParamField path="DO_SPACES_SECRET_ACCESS_KEY" type="string">Spaces secret access key.</ParamField>
 <ParamField path="DO_SPACES_CDN_ENDPOINT" type="string">Optional CDN endpoint URL for Spaces with CDN enabled.</ParamField>
 
+## Media generation
+
+Optional. Enable AI-powered image and video generation features by providing credentials for one or more generation providers.
+
+<ParamField path="WIRO_API_KEY" type="string">
+  [Wiro.ai](https://wiro.ai) API key for AI image and video generation.
+</ParamField>
+
+<ParamField path="WIRO_VIDEO_MODELS" type="string">
+  Comma-separated list of Wiro video model IDs to offer in the UI. Example: `google/veo3.1-fast`.
+</ParamField>
+
+<ParamField path="WIRO_IMAGE_MODELS" type="string">
+  Comma-separated list of Wiro image model IDs. Example: `google/nano-banana-pro,google/nano-banana`.
+</ParamField>
+
+<ParamField path="FAL_API_KEY" type="string">
+  [Fal.ai](https://fal.ai) API key for AI image and video generation.
+</ParamField>
+
+<ParamField path="FAL_VIDEO_MODELS" type="string">
+  Comma-separated list of Fal.ai video model IDs. Example: `fal-ai/veo3,fal-ai/kling-video/v2/master/text-to-video`.
+</ParamField>
+
+<ParamField path="FAL_IMAGE_MODELS" type="string">
+  Comma-separated list of Fal.ai image model IDs. Example: `fal-ai/flux-pro/v1.1-ultra,fal-ai/flux/dev`.
+</ParamField>
+
 ## Analytics & ads
 
 <ParamField path="GOOGLE_ANALYTICS_ID" type="string">
@@ -197,13 +255,16 @@ NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="your-super-secret-key-change-in-production"
 
 # OAuth Providers (optional - enable in prompts.config.ts)
+# GITHUB_CLIENT_ID=your_client_id
+# GITHUB_CLIENT_SECRET=your_client_secret
 # GOOGLE_CLIENT_ID=""
 # GOOGLE_CLIENT_SECRET=""
 # AZURE_AD_CLIENT_ID=""
 # AZURE_AD_CLIENT_SECRET=""
 # AZURE_AD_TENANT_ID=""
-# GITHUB_CLIENT_ID=your_client_id
-# GITHUB_CLIENT_SECRET=your_client_secret
+# Run `npx auth add apple` to generate Apple credentials
+# AUTH_APPLE_ID=""
+# AUTH_APPLE_SECRET=""
 
 # AI Features (optional - enable aiSearch/aiGeneration in prompts.config.ts)
 # OPENAI_API_KEY=your_openai_api_key
@@ -211,6 +272,27 @@ NEXTAUTH_SECRET="your-super-secret-key-change-in-production"
 # OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 # OPENAI_GENERATIVE_MODEL=gpt-4o-mini
 # OPENAI_TRANSLATION_MODEL=gpt-4o-mini
+
+# Storage Providers (optional)
+# ENABLED_STORAGE="do-spaces" | "s3" | "url"
+# S3_BUCKET=""
+# S3_REGION=""
+# S3_ACCESS_KEY_ID=""
+# S3_SECRET_ACCESS_KEY=""
+# S3_ENDPOINT=""
+# DO_SPACES_BUCKET=""
+# DO_SPACES_REGION=""
+# DO_SPACES_ACCESS_KEY_ID=""
+# DO_SPACES_SECRET_ACCESS_KEY=""
+# DO_SPACES_CDN_ENDPOINT=""
+
+# Media Generation (optional)
+# WIRO_API_KEY=your_wiro_api_key
+# WIRO_VIDEO_MODELS="google/veo3.1-fast"
+# WIRO_IMAGE_MODELS="google/nano-banana-pro,google/nano-banana"
+# FAL_API_KEY=your_fal_api_key
+# FAL_VIDEO_MODELS="fal-ai/veo3,fal-ai/kling-video/v2/master/text-to-video"
+# FAL_IMAGE_MODELS="fal-ai/flux-pro/v1.1-ultra,fal-ai/flux/dev"
 
 # Cron Job Secret (for daily credit reset)
 CRON_SECRET="your-secret-key-here"

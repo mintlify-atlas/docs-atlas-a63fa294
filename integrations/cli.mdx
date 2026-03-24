@@ -125,16 +125,14 @@ The CLI is part of the [`prompts.chat`](https://www.npmjs.com/package/prompts.ch
 
 Beyond the CLI, the package exports modules for programmatic use:
 
-| Module | Description |
-|--------|-------------|
-| `builder` | Structured prompt builder with a fluent API |
-| `chat` | Chat/conversational prompt builder |
-| `image` | Image generation prompt builder |
-| `audio` | Music and audio prompt builder |
-| `variables` | Variable detection and normalization |
-| `similarity` | Prompt deduplication and similarity scoring |
-| `quality` | Local prompt quality checking |
-| `parser` | Multi-format prompt parsing |
+| Module | Import path | Description |
+|--------|-------------|-------------|
+| Main | `prompts.chat` | Default export with core utilities |
+| `builder` | `prompts.chat/builder` | Structured prompt builder with a fluent API |
+| `variables` | `prompts.chat/variables` | Variable detection and normalization |
+| `similarity` | `prompts.chat/similarity` | Prompt deduplication and similarity scoring |
+| `quality` | `prompts.chat/quality` | Local prompt quality checking |
+| `parser` | `prompts.chat/parser` | Multi-format prompt parsing |
 
 **Requirements:** Node.js 18 or later.
 

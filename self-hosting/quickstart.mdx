@@ -47,11 +47,11 @@ When the wizard completes it writes a `prompts.config.ts` file with your choices
     DATABASE_URL="postgresql://user:password@localhost:5432/prompts_chat?schema=public"
 
     # Authentication secret (generate a random value)
-    AUTH_SECRET="your-super-secret-key-change-in-production"
+    NEXTAUTH_SECRET="your-super-secret-key-change-in-production"
     ```
 
     <Warning>
-      Never use the default `AUTH_SECRET` value from `.env.example` in production. Generate a strong random secret:
+      Never use the default placeholder value from `.env.example` in production. Generate a strong random secret:
 
       ```bash
       openssl rand -base64 32
@@ -65,13 +65,13 @@ When the wizard completes it writes a `prompts.config.ts` file with your choices
     <CodeGroup>
 
     ```bash GitHub OAuth
-    AUTH_GITHUB_ID="your-github-client-id"
-    AUTH_GITHUB_SECRET="your-github-client-secret"
+    GITHUB_CLIENT_ID="your-github-client-id"
+    GITHUB_CLIENT_SECRET="your-github-client-secret"
     ```
 
     ```bash Google OAuth
-    AUTH_GOOGLE_ID="your-google-client-id"
-    AUTH_GOOGLE_SECRET="your-google-client-secret"
+    GOOGLE_CLIENT_ID="your-google-client-id"
+    GOOGLE_CLIENT_SECRET="your-google-client-secret"
     ```
 
     </CodeGroup>
