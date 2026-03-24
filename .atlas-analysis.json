@@ -1,0 +1,131 @@
+{
+  "projectType": "saas",
+  "projectName": "prompts.chat",
+  "projectDescription": "The world's largest open-source AI prompt library — share, discover, and collect prompts from the community, with self-hosting support for organizations.",
+  "theme": "almond",
+  "primaryColor": "#040404",
+  "lightColor": "#7c7c7c",
+  "darkColor": "#cdcdcd",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Getting Started",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/browsing-prompts",
+              "features/creating-prompts",
+              "features/collections",
+              "features/change-requests",
+              "features/prompt-types",
+              "features/ai-search"
+            ]
+          },
+          {
+            "group": "Integrations",
+            "pages": [
+              "integrations/mcp-server",
+              "integrations/claude-plugin",
+              "integrations/cli"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Self-Hosting",
+        "groups": [
+          {
+            "group": "Deployment",
+            "pages": [
+              "self-hosting/overview",
+              "self-hosting/quickstart",
+              "self-hosting/docker",
+              "self-hosting/manual-setup"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "self-hosting/configuration",
+              "self-hosting/branding",
+              "self-hosting/authentication",
+              "self-hosting/features",
+              "self-hosting/internationalization"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "self-hosting/environment-variables",
+              "self-hosting/database",
+              "self-hosting/security",
+              "self-hosting/updating"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/prompts",
+              "api/categories",
+              "api/tags",
+              "api/users",
+              "api/search"
+            ]
+          },
+          {
+            "group": "MCP Protocol",
+            "pages": [
+              "api/mcp-overview",
+              "api/mcp-tools"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "100,000+ community AI prompts for ChatGPT, Claude, Gemini, and more",
+    "Prompt versioning and change request system (similar to GitHub PRs)",
+    "MCP (Model Context Protocol) server for AI tool integrations",
+    "Self-hostable with white-label branding for organizations",
+    "Multi-language support with 17 locales",
+    "AI-powered semantic search",
+    "Private prompts and collections",
+    "Claude Code plugin and CLI integration",
+    "Structured prompts (JSON/YAML), image prompts, skills, and workflows",
+    "Community voting, leaderboard, and PromptMasters"
+  ],
+  "publicApiSurface": [
+    "GET /api/prompts — List prompts with filtering and pagination",
+    "POST /api/prompts — Create a new prompt",
+    "GET /api/prompts/:id — Get a prompt by ID",
+    "GET /api/prompts/search — Search prompts by keyword",
+    "GET /api/categories — List all categories",
+    "GET /api/tags — List all tags",
+    "GET /api/users/:username — Get user profile",
+    "GET /api/search — Semantic/full-text search",
+    "GET /api/mcp — MCP server endpoint",
+    "GET /api/health — Health check",
+    "GET /api/config — Public configuration"
+  ]
+}
