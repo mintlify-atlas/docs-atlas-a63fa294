@@ -1,0 +1,207 @@
+---
+title: "Manual setup"
+description: "Step-by-step manual installation guide for self-hosting prompts.chat."
+---
+
+This guide walks through a full manual installation. Use this path if you want complete control over the setup, prefer not to use the `npx` scaffolding, or are integrating into an existing deployment pipeline.
+
+## Prerequisites
+
+| Requirement | Version |
+|-------------|--------|
+| Node.js | 24.x (specified in `engines` field) |
+| PostgreSQL | Any recent stable release |
+| npm | Bundled with Node.js 24.x |
+
+## Installation
+
+<Steps>
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/f/prompts.chat.git
+    cd prompts.chat
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    npm install
+    ```
+
+    The `postinstall` script runs `prisma generate` automatically.
+  </Step>
+
+  <Step title="Run the setup wizard (optional)">
+    The interactive wizard configures branding, theme, authentication, languages, and features, then writes `prompts.config.ts`:
+
+    ```bash
+    npm run setup
+    ```
+
+    Skip this step if you prefer to configure `prompts.config.ts` manually. See the [configuration reference](#configuration) below.
+  </Step>
+
+  <Step title="Configure environment variables">
+    ```bash
+    cp .env.example .env
+    ```
+
+    Edit `.env` and set the required variables:
+
+    ```bash
+    # Database
+    DATABASE_URL="postgresql://user:password@localhost:5432/prompts_chat?schema=public"
+
+    # NextAuth
+    NEXTAUTH_URL="http://localhost:3000"
+    AUTH_SECRET="your-super-secret-key-change-in-production"
+    ```
+
+    Add OAuth credentials if you are using social login providers:
+
+    <CodeGroup>
+
+    ```bash GitHub OAuth
+    AUTH_GITHUB_ID="your-github-client-id"
+    AUTH_GITHUB_SECRET="your-github-client-secret"
+    ```
+
+    ```bash Google OAuth
+    AUTH_GOOGLE_ID="your-google-client-id"
+    AUTH_GOOGLE_SECRET="your-google-client-secret"
+    ```
+
+    ```bash Microsoft Entra ID
+    AUTH_AZURE_AD_CLIENT_ID="your-azure-client-id"
+    AUTH_AZURE_AD_CLIENT_SECRET="your-azure-client-secret"
+    AUTH_AZURE_AD_TENANT_ID="your-azure-tenant-id"
+    ```
+
+    </CodeGroup>
+
+    Add your OpenAI API key if you enabled AI search or AI generation:
+
+    ```bash
+    OPENAI_API_KEY="sk-..."
+    ```
+  </Step>
+
+  <Step title="Run database migrations">
+    Apply all Prisma migrations to create the database schema:
+
+    ```bash
+    npm run db:migrate
+    ```
+  </Step>
+
+  <Step title="Seed initial data (optional)">
+    Populate your instance with a starter set of community prompts:
+
+    ```bash
+    npm run db:seed
+    ```
+  </Step>
+
+  <Step title="Start the development server">
+    ```bash
+    npm run dev
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser.
+  </Step>
+
+  <Step title="Build for production">
+    When you are ready to deploy:
+
+    ```bash
+    npm run build
+    npm run start
+    ```
+
+    `npm run build` runs `prisma generate` before compiling the Next.js app.
+  </Step>
+</Steps>
+
+## Configuration
+
+The setup wizard writes `prompts.config.ts` at the project root. You can edit it directly at any time:
+
+```typescript
+// Set to true to replace prompts.chat branding with your own
+const useCloneBranding = true;
+
+export default defineConfig({
+  // Branding
+  branding: {
+    name: "Your Prompt Library",
+    logo: "/your-logo.svg",
+    logoDark: "/your-logo-dark.svg",
+    description: "Your custom description",
+  },
+
+  // Theme
+  theme: {
+    radius: "sm",        // "none" | "sm" | "md" | "lg"
+    variant: "default",  // "flat" | "default" | "brutal"
+    colors: {
+      primary: "#6366f1",
+    },
+  },
+
+  // Authentication
+  auth: {
+    provider: "github",  // "credentials" | "github" | "google" | "azure"
+    allowRegistration: true,
+  },
+
+  // Features
+  features: {
+    privatePrompts: true,
+    changeRequests: true,
+    categories: true,
+    tags: true,
+    comments: true,
+    aiSearch: false,      // Requires OPENAI_API_KEY
+    aiGeneration: false,  // Requires OPENAI_API_KEY
+    mcp: false,
+  },
+
+  // Homepage
+  homepage: {
+    useCloneBranding,
+    achievements: {
+      enabled: !useCloneBranding,
+    },
+    sponsors: {
+      enabled: !useCloneBranding,
+    },
+  },
+
+  // Internationalization
+  i18n: {
+    locales: ["en", "es", "ja", "tr", "zh"],
+    defaultLocale: "en",
+  },
+});
+```
+
+<Note>
+  When `useCloneBranding` is `true`, the homepage displays your branding name and logo instead of prompts.chat branding, and hides the achievements and sponsors sections.
+</Note>
+
+## npm scripts reference
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `dev` | `next dev` | Start the development server on port 3000 |
+| `build` | `prisma generate && next build` | Generate Prisma client and build for production |
+| `start` | `next start` | Start the production server |
+| `lint` | `eslint` | Run ESLint across the project |
+| `db:generate` | `prisma generate` | Regenerate the Prisma client |
+| `db:migrate` | `prisma migrate dev` | Create and apply a new migration |
+| `db:push` | `prisma db push` | Push schema changes to the database without a migration file |
+| `db:studio` | `prisma studio` | Open the Prisma Studio visual database browser |
+| `db:seed` | `prisma db seed` | Seed the database with initial prompt data |
+| `db:setup` | `prisma generate && prisma migrate dev && prisma db seed` | Full database setup in one command |
+| `db:resetadmin` | `npx tsx prisma/reset-admin.ts` | Reset the admin account credentials |
+| `setup` | `node scripts/setup.js` | Run the interactive configuration wizard |

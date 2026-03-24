@@ -1,0 +1,170 @@
+---
+title: "Prompt types"
+description: "A reference for all seven prompt types: TEXT, IMAGE, VIDEO, AUDIO, STRUCTURED, SKILL, and TASTE."
+---
+
+Every prompt has a `type` field that describes the primary output it is designed to produce, or a special structural role. The type affects how the prompt card renders, which actions are available, and whether extra metadata fields apply.
+
+<Tabs>
+  <Tab title="TEXT">
+    **Default type.** A plain natural-language instruction for a chat model.
+
+    - Rendered as a monospace text preview on the prompt card.
+    - Supports template variables (`{{variable_name}}`).
+    - Works with any text-generation model.
+
+    **Example:**
+
+    ```
+    You are an expert technical writer. Rewrite the following documentation
+    section to be clear, concise, and jargon-free. Target audience:
+    {{target_audience}}.
+
+    Documentation:
+    {{content}}
+    ```
+  </Tab>
+  <Tab title="IMAGE">
+    A prompt designed to generate images with a model such as DALL·E, Stable Diffusion, or Midjourney.
+
+    - A `mediaUrl` can be attached to show a sample output image.
+    - Rendered with an image preview above the prompt text on the card.
+    - The type badge shows **IMAGE**.
+
+    **Example:**
+
+    ```
+    A photorealistic portrait of a {{age}}-year-old {{profession}} in a
+    {{setting}}, golden hour lighting, shallow depth of field,
+    shot on a 85mm lens, 4K resolution.
+    ```
+  </Tab>
+  <Tab title="VIDEO">
+    A prompt for video generation models (e.g. Sora, Runway, Kling).
+
+    - Attach a `mediaUrl` pointing to an `.mp4` file to show an autoplaying sample.
+    - The video autoplays muted when scrolled into view and pauses when scrolled out.
+
+    **Example:**
+
+    ```
+    Cinematic drone shot flying low over a {{landscape}} at dawn,
+    slow motion, photorealistic, 4K, no text or watermarks.
+    Duration: 5 seconds.
+    ```
+  </Tab>
+  <Tab title="AUDIO">
+    A prompt for text-to-speech or audio generation models.
+
+    - Attach a `mediaUrl` pointing to an audio file (`.mp3`, `.wav`, `.ogg`) to embed an audio player.
+    - The audio player is shown inline on the prompt card.
+
+    **Example:**
+
+    ```
+    Generate a 30-second ambient background track suitable for deep focus work.
+    Style: lo-fi, slow BPM, no lyrics, warm tones.
+    ```
+  </Tab>
+  <Tab title="STRUCTURED">
+    A prompt whose body is a machine-readable JSON or YAML document rather than free-form text. Useful for workflow definitions, config templates, or agent instructions.
+
+    Set `structuredFormat` to `JSON` or `YAML` alongside `type: TEXT` (STRUCTURED is the UI selector name; the stored `type` remains `TEXT`).
+
+    Rendered with syntax highlighting in the prompt card.
+
+    <CodeGroup>
+    ```json JSON example
+    {
+      "role": "system",
+      "persona": "senior data analyst",
+      "constraints": [
+        "Use only the data provided",
+        "Cite sources inline",
+        "Output in Markdown table format"
+      ],
+      "task": "Analyse {{dataset}} and summarise key trends."
+    }
+    ```
+
+    ```yaml YAML example
+    role: system
+    persona: senior data analyst
+    constraints:
+      - Use only the data provided
+      - Cite sources inline
+      - Output in Markdown table format
+    task: "Analyse {{dataset}} and summarise key trends."
+    ```
+    </CodeGroup>
+  </Tab>
+  <Tab title="SKILL">
+    A bundled, multi-file prompt package intended for AI coding assistants such as Claude Code or Cursor. Skills are downloaded as a `.skill` zip archive.
+
+    - The content is a YAML document with SKILL frontmatter (`---`) followed by individual file sections.
+    - The card shows a **Download** button instead of Copy.
+    - The frontmatter `name` and `description` are synced from the prompt title and description fields.
+
+    **Example:**
+
+    ```yaml
+    ---
+    name: Next.js App Router Conventions
+    description: Enforce consistent Next.js 14 App Router patterns
+    version: 1.0.0
+    ---
+
+    ## CONVENTIONS.md
+
+    - Use React Server Components by default.
+    - Add `"use client"` only when the component requires browser APIs or state.
+    - Co-locate page data-fetching in the page component using `async/await`.
+    - Use `loading.tsx` and `error.tsx` for streaming and error boundaries.
+    ```
+  </Tab>
+  <Tab title="TASTE">
+    A preference document that tells an AI assistant about your coding style, tooling choices, and personal conventions. Unlike instructions, taste prompts express degrees of confidence.
+
+    **Example:**
+
+    ```markdown
+    # Taste
+    - Package manager is npm (not pnpm or yarn). Confidence: 0.95
+    - Use Next.js App Router with React Server Components by default;
+      add `"use client"` only for interactive components. Confidence: 0.95
+    - Prefer Tailwind CSS utility classes over inline styles. Confidence: 0.90
+    - Variable names in camelCase; constants in UPPER_SNAKE_CASE. Confidence: 0.85
+    ```
+  </Tab>
+</Tabs>
+
+## The `bestWithModels` field
+
+Any prompt type can declare up to **3 model slugs** that produce the best results:
+
+```json
+{
+  "bestWithModels": ["gpt-4o", "claude-3-5-sonnet", "gemini-2.0-flash"]
+}
+```
+
+The slugs are free-form strings but should match common model identifiers so the UI can look up a display name. Displayed as compatibility badges on the prompt detail page.
+
+## The `bestWithMCP` field
+
+For prompts that pair well with specific MCP servers, you can declare the server command and the relevant tools:
+
+```json
+{
+  "bestWithMCP": [
+    {
+      "command": "npx -y @modelcontextprotocol/server-filesystem /workspace",
+      "tools": ["read_file", "write_file", "list_directory"]
+    }
+  ]
+}
+```
+
+## The `workflowLink` field
+
+Flow prompts — prompts that are connected in a multi-step chain via `PromptConnection` — can include a `workflowLink` URL pointing to a live demo or sandbox where users can test the full workflow.

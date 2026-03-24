@@ -1,0 +1,79 @@
+---
+title: "Tags API"
+description: "Browse and filter by prompt tags"
+---
+
+Tags are free-form labels attached to prompts. Each tag has a unique name, slug, and display color.
+
+## Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/tags` | No | List all tags |
+
+<Note>
+  Tag management (create, update, delete) is available to admins only via `/api/admin/tags`.
+</Note>
+
+---
+
+## GET /api/tags
+
+Return all tags. No authentication required.
+
+### Response
+
+An array of tag objects.
+
+<ResponseField name="id" type="string">Unique tag ID.</ResponseField>
+<ResponseField name="name" type="string">Display name (unique).</ResponseField>
+<ResponseField name="slug" type="string">URL-friendly identifier (unique).</ResponseField>
+<ResponseField name="color" type="string">Hex color used to display the tag, e.g. `#6366f1`.</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash curl
+curl https://prompts.chat/api/tags
+```
+
+```typescript TypeScript
+const res = await fetch('https://prompts.chat/api/tags');
+const tags = await res.json();
+```
+
+</CodeGroup>
+
+```json Response
+[
+  {
+    "id": "cm1tag001",
+    "name": "productivity",
+    "slug": "productivity",
+    "color": "#6366f1"
+  },
+  {
+    "id": "cm1tag002",
+    "name": "coding",
+    "slug": "coding",
+    "color": "#10b981"
+  }
+]
+```
+
+## Filtering prompts by tag
+
+Pass a tag slug to the prompts list endpoint:
+
+```bash
+curl "https://prompts.chat/api/prompts?tag=productivity"
+```
+
+To require multiple tags (AND logic), comma-separate the slugs:
+
+```bash
+curl "https://prompts.chat/api/prompts?tag=productivity,coding"
+```
+
+See [Prompts API](/api/prompts) for the full list of available filters.

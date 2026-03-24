@@ -1,0 +1,234 @@
+---
+title: "Database"
+description: "PostgreSQL setup, migrations, and management for your prompts.chat instance."
+---
+
+prompts.chat uses **PostgreSQL** as its database, managed through **Prisma ORM**. This page covers how to set up your database, run migrations, and manage data.
+
+## Requirements
+
+- PostgreSQL 14 or later
+- Node.js 18 or later (24.x recommended)
+
+## Connection string
+
+Set `DATABASE_URL` in your `.env` file to a valid PostgreSQL connection string:
+
+```bash
+DATABASE_URL="postgresql://user:password@host:5432/dbname?schema=public"
+```
+
+| Segment | Example | Description |
+|---------|---------|-------------|
+| `user` | `prompts` | Database user |
+| `password` | `s3cr3t` | Database password |
+| `host` | `localhost` | Hostname or IP |
+| `5432` | `5432` | PostgreSQL port |
+| `dbname` | `prompts_chat` | Database name |
+| `schema` | `public` | PostgreSQL schema |
+
+## Connection pooling
+
+When using a connection pooler such as **PgBouncer**, **Supabase**, or **Neon**'s pooled endpoint, set a second variable so Prisma can still run migrations directly:
+
+```bash
+# Pooled connection — used at runtime
+DATABASE_URL="postgresql://user:password@pooler.host:6543/dbname?schema=public&connection_limit=5&pool_timeout=10"
+
+# Direct connection — used by Prisma migrations only
+DIRECT_URL="postgresql://user:password@db.host:5432/dbname?schema=public"
+```
+
+This matches the Prisma `schema.prisma` configuration:
+
+```prisma prisma/schema.prisma
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+```
+
+<Note>
+  If you are not using a connection pooler, you only need `DATABASE_URL`. The `DIRECT_URL` variable is optional.
+</Note>
+
+## Database commands
+
+All database commands are available via `npm run`:
+
+| Command | Prisma equivalent | Description |
+|---------|-------------------|-------------|
+| `npm run db:generate` | `prisma generate` | Generate the Prisma Client from schema |
+| `npm run db:migrate` | `prisma migrate dev` | Create and apply a new migration (development) |
+| `npm run db:deploy` | `prisma migrate deploy` | Apply pending migrations (production) |
+| `npm run db:push` | `prisma db push` | Push schema changes without creating a migration |
+| `npm run db:studio` | `prisma studio` | Open the Prisma Studio GUI |
+| `npm run db:seed` | `prisma db seed` | Seed the database with initial prompt data |
+| `npm run db:resetadmin` | — | Reset the admin user credentials |
+| `npm run db:setup` | — | Generate + migrate + seed in one command |
+
+## Initial setup
+
+<Steps>
+  <Step title="Create the database">
+    Create a PostgreSQL database for your instance:
+
+    ```sql
+    CREATE DATABASE prompts_chat;
+    ```
+  </Step>
+
+  <Step title="Configure the connection">
+    Set `DATABASE_URL` in your `.env` file:
+
+    ```bash
+    DATABASE_URL="postgresql://postgres:postgres@localhost:5432/prompts_chat?schema=public"
+    ```
+  </Step>
+
+  <Step title="Run the full setup">
+    Generate the Prisma client, run all migrations, and seed initial data in one command:
+
+    ```bash
+    npm run db:setup
+    ```
+
+    Or run each step individually:
+
+    <CodeGroup>
+
+    ```bash Generate client
+    npm run db:generate
+    ```
+
+    ```bash Run migrations
+    npm run db:migrate
+    ```
+
+    ```bash Seed data
+    npm run db:seed
+    ```
+
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Migrations
+
+### Development
+
+Use `db:migrate` during development. This creates a new migration file and applies it:
+
+```bash
+npm run db:migrate
+```
+
+Prisma will prompt you to name the migration. The migration file is saved under `prisma/migrations/`.
+
+### Production
+
+<Warning>
+  Always run `npm run db:deploy` before starting the application in production. Skipping this step when schema changes are present will cause runtime errors.
+</Warning>
+
+Use `db:deploy` in production CI/CD pipelines and during updates. It applies only pending migrations without creating new ones:
+
+```bash
+npm run db:deploy
+```
+
+This is safe to run on every deploy — it is a no-op when there are no pending migrations.
+
+### Existing migrations
+
+The repository ships with 25 migrations covering the full schema history, from the initial tables through all features:
+
+```
+prisma/migrations/
+├── 20251208185808_init/
+├── 20251210224836_add_embedding_field/
+├── 20251211093327_add_featured_prompts/
+├── 20251213100000_add_verified_and_reports/
+├── 20251216195800_add_api_key_and_mcp_settings/
+├── 20251218145900_add_comments_system/
+├── 20251221121143_add_prompt_connections/
+├── 20260104210000_add_collections/
+├── 20260201175000_add_user_prompt_examples/
+└── ... (25 total)
+```
+
+## Seeding
+
+The seed script (`prisma/seed.ts`) imports prompts from `prompts.csv` and creates an initial admin user.
+
+```bash
+npm run db:seed
+```
+
+What gets seeded:
+
+- **Prompts** — 100+ community prompts from `prompts.csv`, covering categories like writing, coding, productivity, and more
+- **Categories and tags** — associated metadata for each prompt
+- **Admin user** — a default admin account
+
+<Note>
+  Seeding is idempotent. Running it multiple times will not create duplicate prompts.
+</Note>
+
+### Resetting the admin user
+
+If you need to reset the admin user's credentials:
+
+```bash
+npm run db:resetadmin
+```
+
+## Prisma Studio
+
+Prisma Studio is a visual browser for your database. Use it to inspect and edit records without writing SQL.
+
+```bash
+npm run db:studio
+```
+
+This opens a local web interface at `http://localhost:5555` where you can browse all tables, filter rows, and make edits.
+
+## Backup and restore
+
+<Tabs>
+  <Tab title="Docker">
+    When running the all-in-one Docker image, the internal PostgreSQL data is stored in the `/data/postgres` volume.
+
+    **Backup:**
+
+    ```bash
+    docker exec prompts pg_dump -U prompts prompts > backup.sql
+    ```
+
+    **Restore:**
+
+    ```bash
+    docker exec -i prompts psql -U prompts prompts < backup.sql
+    ```
+  </Tab>
+  <Tab title="External PostgreSQL">
+    Use standard `pg_dump` and `psql` tools against your database host.
+
+    **Backup:**
+
+    ```bash
+    pg_dump -h host -U user -d dbname -f backup.sql
+    ```
+
+    **Restore:**
+
+    ```bash
+    psql -h host -U user -d dbname -f backup.sql
+    ```
+  </Tab>
+</Tabs>
+
+<Tip>
+  Schedule automated backups using a cron job or your cloud provider's managed backup feature. Test restores periodically to confirm they work.
+</Tip>

@@ -1,0 +1,156 @@
+---
+title: "CLI"
+description: "Access prompts.chat from the terminal with npx — browse prompts interactively, scaffold a self-hosted instance, or run a local MCP server."
+---
+
+The `prompts.chat` npm package ships a CLI with three modes: an interactive prompt browser, a project scaffolding wizard, and a local MCP server.
+
+## Interactive prompt browser
+
+Browse and copy prompts from your terminal with no installation:
+
+```bash
+npx prompts.chat
+```
+
+This opens a full-screen interactive UI backed by the prompts.chat library.
+
+**Navigation**
+
+| Key | Action |
+|-----|--------|
+| `↑` / `↓` or `j` / `k` | Navigate the list |
+| `Enter` | Select a prompt |
+| `/` | Search prompts |
+| `n` / `p` | Next / previous page |
+| `c` | Copy prompt (with variable filling) |
+| `C` | Copy raw prompt |
+| `r` | Run prompt (open in ChatGPT, Claude, etc.) |
+| `o` | Open in browser |
+| `b` | Go back |
+| `q` | Quit |
+
+## Self-hosting scaffold
+
+Scaffold a new prompts.chat deployment with a single command:
+
+```bash
+npx prompts.chat new <project-name>
+```
+
+**Example:**
+
+```bash
+npx prompts.chat new my-prompt-library
+cd my-prompt-library
+```
+
+This command:
+1. Clones a clean copy of the repository (removes `.github`, `.claude`, `packages/`, and dev scripts)
+2. Installs dependencies
+3. Launches the interactive setup wizard
+
+The setup wizard walks you through:
+- App name, logo, and description
+- Authentication provider (GitHub, Google, or email/password)
+- Theme and UI customization
+- Feature flags and supported languages
+
+<Info>
+  For full configuration options and deployment guides, see the [Self-Hosting overview](/self-hosting/overview).
+</Info>
+
+## Local MCP server
+
+Run the prompts.chat MCP server locally instead of connecting to the hosted remote endpoint:
+
+```bash
+npx prompts.chat mcp
+```
+
+To use this as the transport in your MCP client, add the following to your client's MCP config:
+
+```json
+{
+  "mcpServers": {
+    "prompts.chat": {
+      "command": "npx",
+      "args": ["-y", "prompts.chat", "mcp"]
+    }
+  }
+}
+```
+
+Pass an API key via the environment to enable saving prompts and skills:
+
+```json
+{
+  "mcpServers": {
+    "prompts.chat": {
+      "command": "npx",
+      "args": ["-y", "prompts.chat", "mcp"],
+      "env": {
+        "PROMPTS_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
+
+<Tip>
+  For most setups, the remote MCP server (`"url": "https://prompts.chat/api/mcp"`) is simpler and keeps the server up to date automatically. Use the local mode if you need offline access or want to self-host everything.
+</Tip>
+
+## The prompts.chat npm package
+
+The CLI is part of the [`prompts.chat`](https://www.npmjs.com/package/prompts.chat) npm package — a developer toolkit for building, validating, and parsing AI prompts.
+
+<Tabs>
+  <Tab title="npm">
+    ```bash
+    npm install prompts.chat
+    ```
+  </Tab>
+  <Tab title="pnpm">
+    ```bash
+    pnpm add prompts.chat
+    ```
+  </Tab>
+  <Tab title="yarn">
+    ```bash
+    yarn add prompts.chat
+    ```
+  </Tab>
+</Tabs>
+
+Beyond the CLI, the package exports modules for programmatic use:
+
+| Module | Description |
+|--------|-------------|
+| `builder` | Structured prompt builder with a fluent API |
+| `chat` | Chat/conversational prompt builder |
+| `image` | Image generation prompt builder |
+| `audio` | Music and audio prompt builder |
+| `variables` | Variable detection and normalization |
+| `similarity` | Prompt deduplication and similarity scoring |
+| `quality` | Local prompt quality checking |
+| `parser` | Multi-format prompt parsing |
+
+**Requirements:** Node.js 18 or later.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="MCP server" icon="plug" href="/integrations/mcp-server">
+    Connect prompts.chat to Claude Desktop, Cursor, and Windsurf
+  </Card>
+  <Card title="Claude Code plugin" icon="puzzle-piece" href="/integrations/claude-plugin">
+    Install the Claude Code plugin for slash commands and agents
+  </Card>
+  <Card title="Self-hosting" icon="server" href="/self-hosting/overview">
+    Deploy a private prompt library for your team
+  </Card>
+  <Card title="API reference" icon="code" href="/api/overview">
+    Explore the REST API
+  </Card>
+</CardGroup>

@@ -1,0 +1,104 @@
+---
+title: "API overview"
+description: "REST API and MCP server for programmatic access to prompts.chat"
+---
+
+The prompts.chat API gives you programmatic access to the prompt library. You can list, search, create, and manage prompts, categories, tags, and users.
+
+**Base URL**
+
+```
+https://prompts.chat/api
+```
+
+<CardGroup cols={2}>
+  <Card title="REST API" icon="code">
+    JSON over HTTP. Public read endpoints require no auth. Write endpoints require an API key.
+  </Card>
+  <Card title="MCP server" icon="server">
+    Connect prompts.chat as a Model Context Protocol server to Claude, Cursor, Windsurf, and other AI tools.
+  </Card>
+</CardGroup>
+
+## API modes
+
+### Public read access
+
+GET endpoints for prompts, categories, and tags are publicly accessible without authentication. These endpoints return only public, non-unlisted prompts.
+
+### Authenticated access
+
+Creating, updating, and deleting prompts requires an API key. Pass the key as a Bearer token in the `Authorization` header or as a query parameter.
+
+<Note>
+  Get your API key from [prompts.chat/settings](https://prompts.chat/settings). Keys have the format `pchat_` followed by 64 hex characters.
+</Note>
+
+See [Authentication](/api/authentication) for details.
+
+## Response format
+
+All responses are JSON. Successful responses return the requested resource or a result object. Error responses use a consistent structure:
+
+```json
+{
+  "error": "error_code",
+  "message": "Human-readable description"
+}
+```
+
+## Common error codes
+
+| Status | Error code | Meaning |
+|--------|------------|---------|
+| 400 | `validation_error` | Request body failed schema validation |
+| 401 | `unauthorized` | Missing or invalid API key |
+| 403 | `forbidden` | Authenticated but not allowed (e.g. editing another user's prompt) |
+| 404 | `not_found` | Resource does not exist |
+| 409 | `duplicate_prompt` | You already have a prompt with the same title or content |
+| 409 | `content_exists` | A prompt with similar content already exists from another author |
+| 429 | `rate_limit` | Created a prompt within the last 30 seconds |
+| 429 | `daily_limit` | Flagged accounts are limited to 5 prompts per day |
+| 500 | `server_error` | Unexpected server error |
+
+## Rate limits
+
+- **Cooldown:** You must wait 30 seconds between prompt creation requests.
+- **Daily limit (flagged users):** Accounts flagged for unusual activity are limited to 5 prompts per 24 hours.
+
+When a rate limit is hit, the API returns HTTP 429 with an `error` of `rate_limit` or `daily_limit`.
+
+## Health check
+
+`GET /api/health` returns the current status of the API and database connection. No authentication required.
+
+<CodeGroup>
+
+```bash Request
+curl https://prompts.chat/api/health
+```
+
+```json Response
+{
+  "status": "healthy",
+  "timestamp": "2026-03-24T12:00:00.000Z",
+  "database": "connected"
+}
+```
+
+</CodeGroup>
+
+Returns HTTP 503 with `status: "unhealthy"` if the database is unreachable.
+
+## Config endpoint
+
+`GET /api/config/storage` returns the configured storage mode for media uploads.
+
+```json
+{
+  "mode": "url",
+  "supportsUpload": false
+}
+```
+
+`mode` is `url` (link-only) or `s3` (direct upload). `supportsUpload` is `true` only when S3 is configured.

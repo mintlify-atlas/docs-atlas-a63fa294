@@ -1,0 +1,154 @@
+---
+title: "AI-powered search"
+description: "Use semantic embeddings to find prompts by meaning rather than exact keywords."
+---
+
+prompts.chat supports two distinct search modes: **keyword search** (the default) and **AI semantic search**. Semantic search understands the intent behind a query and returns relevant prompts even when they share no words with the search term.
+
+## How each mode works
+
+<Tabs>
+  <Tab title="Keyword search">
+    The default mode. Runs a case-insensitive full-text `CONTAINS` query against three fields:
+
+    - `title`
+    - `content`
+    - `description`
+
+    Supports multiple comma-separated keywords. All terms are ORed together:
+
+    ```
+    GET /api/prompts?q=python,async,concurrency
+    ```
+
+    This matches any prompt where at least one of `python`, `async`, or `concurrency` appears in the title, content, or description.
+  </Tab>
+  <Tab title="AI semantic search">
+    Converts the query into a vector embedding using the OpenAI `text-embedding` model, then returns the prompts whose stored embeddings are most similar.
+
+    Semantic search finds prompts by **meaning** regardless of exact wording. A query like *"make my writing more persuasive"* can surface prompts titled *"Copywriter persona"* that share no literal words.
+
+    **Requires:** `OPENAI_API_KEY` set in your environment.
+  </Tab>
+</Tabs>
+
+## Enabling AI search
+
+<Note>
+  AI semantic search is only available when `OPENAI_API_KEY` is present in the server environment. If the key is missing, the AI search toggle is hidden in the UI and the `?ai=1` parameter is silently ignored.
+</Note>
+
+To enable it on a self-hosted instance, add the key to your `.env` file:
+
+```bash
+OPENAI_API_KEY=sk-...
+```
+
+Embeddings are generated asynchronously when a public prompt is created. Existing prompts without embeddings fall back to keyword search.
+
+## Using AI search in the UI
+
+<Steps>
+  <Step title="Open the prompts page">
+    Go to [prompts.chat/prompts](https://prompts.chat/prompts).
+  </Step>
+  <Step title="Toggle AI search">
+    In the filter sidebar, flip the **AI search** toggle. The toggle is only visible when `OPENAI_API_KEY` is configured.
+  </Step>
+  <Step title="Enter a natural-language query">
+    Type a descriptive query in the search box and press Enter. Results are ranked by semantic similarity.
+  </Step>
+</Steps>
+
+## Search API endpoints
+
+### Standard prompt search
+
+The main prompt listing endpoint accepts search and filter parameters:
+
+```bash
+GET /api/prompts?q=<query>&type=<type>&category=<id>&tag=<slug>&sort=<order>
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `q` | string | Keyword search term (comma-separated for multiple terms) |
+| `type` | enum | Filter by type: `TEXT` \| `IMAGE` \| `VIDEO` \| `AUDIO` \| `STRUCTURED` \| `SKILL` \| `TASTE` |
+| `category` | string | Filter by category ID |
+| `tag` | string | Filter by tag slug (comma-separated for multiple tags) |
+| `sort` | enum | `newest` (default) \| `oldest` \| `upvotes` |
+| `page` | number | Page number for pagination (default: 1) |
+| `perPage` | number | Results per page (default: 24) |
+
+**Response:**
+
+```json
+{
+  "prompts": [...],
+  "total": 1842,
+  "page": 1,
+  "perPage": 24,
+  "totalPages": 77
+}
+```
+
+### AI semantic search endpoint
+
+A dedicated endpoint for semantic search:
+
+```bash
+GET /api/search/ai?q=<query>&limit=<n>
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `q` | string | Natural-language search query (required) |
+| `limit` | number | Maximum results to return (default: 20) |
+
+**Example:**
+
+```bash
+curl "https://prompts.chat/api/search/ai?q=improve+my+writing+style&limit=5"
+```
+
+**Response:**
+
+```json
+{
+  "results": [
+    {
+      "id": "clx1234",
+      "title": "Professional copywriter",
+      "description": "Rewrites text for clarity and persuasion",
+      ...
+    }
+  ],
+  "query": "improve my writing style",
+  "count": 5
+}
+```
+
+<Note>
+  The `/api/search/ai` endpoint returns HTTP `400` with `{ "error": "AI Search is not enabled" }` when `OPENAI_API_KEY` is not configured.
+</Note>
+
+## How embeddings are stored
+
+When a public prompt is created:
+
+1. `generatePromptEmbedding(promptId)` is called asynchronously.
+2. The OpenAI API converts `title + description + content` into a vector.
+3. The vector is stored in the `embedding` JSON column on the `prompts` table.
+4. `findAndSaveRelatedPrompts(promptId)` runs to link semantically similar prompts as **related** connections.
+
+The embedding column is excluded from all public API responses.
+
+## Combining semantic search with the UI
+
+Semantic search can be activated via URL parameter for direct links:
+
+```
+https://prompts.chat/prompts?q=debug+my+code&ai=1
+```
+
+Comma-separated keywords in `?q` are joined with spaces before the embedding is generated, so `?q=fix,bugs,python&ai=1` produces the query `"fix bugs python"` for the embedding model.

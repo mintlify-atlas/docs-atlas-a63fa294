@@ -1,0 +1,73 @@
+---
+title: "Collections"
+description: "Save prompts to your personal collection and pin favourites to your public profile."
+---
+
+Collections let you bookmark prompts for quick access later. Your collection is private to your account; other users cannot see which prompts you have saved.
+
+## Saving a prompt
+
+<Steps>
+  <Step title="Find a prompt">
+    Browse the library at [prompts.chat/prompts](https://prompts.chat/prompts) or open any prompt detail page.
+  </Step>
+  <Step title="Click the bookmark button">
+    On the prompt detail page, click the **Bookmark** (Save) button in the action bar. The button turns highlighted to indicate the prompt is in your collection.
+  </Step>
+  <Step title="Remove from collection">
+    Click the button again to remove the prompt. The button label changes to reflect the current state.
+  </Step>
+</Steps>
+
+<Info>
+  You must be logged in to use collections. Clicking the bookmark button while logged out redirects you to `/login`.
+</Info>
+
+## Viewing your collection
+
+Navigate to [prompts.chat/collection](https://prompts.chat/collection) to see all saved prompts sorted by the date you saved them (most recent first).
+
+<CardGroup cols={2}>
+  <Card title="Sorted by saved date">
+    Prompts appear in the order you bookmarked them, with the most recently saved at the top.
+  </Card>
+  <Card title="Deleted prompts filtered out">
+    If an author deletes a prompt you had saved, it is automatically excluded from your collection view.
+  </Card>
+</CardGroup>
+
+## Pinned prompts
+
+Pinning is different from saving — pinned prompts appear as a highlighted section on your **public profile** page at `prompts.chat/@username`.
+
+<Steps>
+  <Step title="Open a prompt card">
+    Hover over any prompt card. A **pin icon** appears in the top-right corner of the content preview.
+  </Step>
+  <Step title="Click the pin icon">
+    Click the pin icon to pin the prompt to your profile. Pinned prompts are sorted by a custom `order` field so you can arrange them.
+  </Step>
+  <Step title="Unpin">
+    Click the pin icon again on a currently-pinned prompt to remove it from your profile.
+  </Step>
+</Steps>
+
+<Info>
+  The pin button is only visible on your own prompt cards when you are logged in. Visitors to your profile always see the pinned section.
+</Info>
+
+## Using the collection API
+
+The collection is managed via two REST endpoints:
+
+```bash
+# Add a prompt to your collection
+curl -X POST https://prompts.chat/api/collection \
+  -H "Content-Type: application/json" \
+  -d '{"promptId": "<prompt-id>"}'
+
+# Remove a prompt from your collection
+curl -X DELETE "https://prompts.chat/api/collection?promptId=<prompt-id>"
+```
+
+Both endpoints require an authenticated session cookie or API key.

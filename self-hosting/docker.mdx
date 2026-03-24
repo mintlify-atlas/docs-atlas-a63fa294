@@ -1,0 +1,356 @@
+---
+title: "Docker deployment"
+description: "Run a fully configured prompts.chat instance with a single Docker command."
+---
+
+The Docker image bundles the application and a PostgreSQL database into a single container. No external database is required.
+
+## Quick start
+
+```bash
+docker run -d \
+  --name prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  ghcr.io/f/prompts.chat
+```
+
+Open [http://localhost:4444](http://localhost:4444) in your browser.
+
+<Info>
+  On the first run the container clones the repository and builds the app, which takes approximately 3–5 minutes. Subsequent starts use the cached build and are nearly instant.
+</Info>
+
+## Custom branding
+
+Pass `PCHAT_*` environment variables to customize your instance at build time:
+
+```bash
+docker run -d \
+  --name my-prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  -e PCHAT_NAME="Acme Prompts" \
+  -e PCHAT_DESCRIPTION="Our team's AI prompt library" \
+  -e PCHAT_COLOR="#ff6600" \
+  -e PCHAT_AUTH_PROVIDERS="github,google" \
+  -e PCHAT_LOCALES="en,es,fr" \
+  ghcr.io/f/prompts.chat
+```
+
+<Warning>
+  Branding variables are applied during the first build. To change them later you must delete the volume and recreate the container:
+
+  ```bash
+  docker rm -f my-prompts
+  docker volume rm prompts-data
+  docker run ... # with the updated env vars
+  ```
+</Warning>
+
+## Configuration reference
+
+All variables use the `PCHAT_` prefix to avoid conflicts with other environment variables.
+
+### Branding
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `PCHAT_NAME` | `branding.name` | App name shown in the UI | `My Prompt Library` |
+| `PCHAT_DESCRIPTION` | `branding.description` | App description | `Collect, organize...` |
+| `PCHAT_LOGO` | `branding.logo` | Logo path (relative to `public/`) | `/logo.svg` |
+| `PCHAT_LOGO_DARK` | `branding.logoDark` | Dark mode logo path | Same as `PCHAT_LOGO` |
+| `PCHAT_FAVICON` | `branding.favicon` | Favicon path | `/logo.svg` |
+
+### Theme
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `PCHAT_COLOR` | `theme.colors.primary` | Primary color (hex) | `#6366f1` |
+| `PCHAT_THEME_RADIUS` | `theme.radius` | Border radius: `none` \| `sm` \| `md` \| `lg` | `sm` |
+| `PCHAT_THEME_VARIANT` | `theme.variant` | UI style: `default` \| `flat` \| `brutal` | `default` |
+| `PCHAT_THEME_DENSITY` | `theme.density` | Spacing: `compact` \| `default` \| `comfortable` | `default` |
+
+### Authentication
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `PCHAT_AUTH_PROVIDERS` | `auth.providers` | Comma-separated list: `github,google,credentials` | `credentials` |
+| `PCHAT_ALLOW_REGISTRATION` | `auth.allowRegistration` | Allow public sign-up | `true` |
+
+### Internationalization
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `PCHAT_LOCALES` | `i18n.locales` | Supported locales (comma-separated) | `en` |
+| `PCHAT_DEFAULT_LOCALE` | `i18n.defaultLocale` | Default locale | `en` |
+
+### Features
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `PCHAT_FEATURE_PRIVATE_PROMPTS` | `features.privatePrompts` | Enable private prompts | `true` |
+| `PCHAT_FEATURE_CHANGE_REQUESTS` | `features.changeRequests` | Enable prompt versioning | `true` |
+| `PCHAT_FEATURE_CATEGORIES` | `features.categories` | Enable categories | `true` |
+| `PCHAT_FEATURE_TAGS` | `features.tags` | Enable tags | `true` |
+| `PCHAT_FEATURE_COMMENTS` | `features.comments` | Enable comments | `true` |
+| `PCHAT_FEATURE_AI_SEARCH` | `features.aiSearch` | Enable AI semantic search | `false` |
+| `PCHAT_FEATURE_AI_GENERATION` | `features.aiGeneration` | Enable AI prompt generation | `false` |
+| `PCHAT_FEATURE_MCP` | `features.mcp` | Enable MCP features | `false` |
+
+### System variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `AUTH_SECRET` | Secret used to sign authentication tokens | Auto-generated |
+| `PORT` | Internal container port | `3000` |
+| `DATABASE_URL` | PostgreSQL connection string | Internal bundled database |
+
+## Production setup
+
+<Steps>
+  <Step title="Generate an AUTH_SECRET">
+    Always set `AUTH_SECRET` explicitly in production. The auto-generated value resets on every container restart, which invalidates all existing sessions.
+
+    ```bash
+    openssl rand -base64 32
+    ```
+  </Step>
+
+  <Step title="Run the container">
+    ```bash
+    docker run -d \
+      --name prompts \
+      -p 4444:3000 \
+      -v prompts-data:/data \
+      -e AUTH_SECRET="your-generated-secret" \
+      -e PCHAT_NAME="My Company Prompts" \
+      ghcr.io/f/prompts.chat
+    ```
+  </Step>
+</Steps>
+
+### With OAuth providers
+
+```bash
+docker run -d \
+  --name prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  -e AUTH_SECRET="your-secret-key" \
+  -e PCHAT_AUTH_PROVIDERS="github,google" \
+  -e AUTH_GITHUB_ID="your-github-client-id" \
+  -e AUTH_GITHUB_SECRET="your-github-client-secret" \
+  -e AUTH_GOOGLE_ID="your-google-client-id" \
+  -e AUTH_GOOGLE_SECRET="your-google-client-secret" \
+  ghcr.io/f/prompts.chat
+```
+
+### With AI features
+
+```bash
+docker run -d \
+  --name prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  -e PCHAT_FEATURE_AI_SEARCH="true" \
+  -e PCHAT_FEATURE_AI_GENERATION="true" \
+  -e OPENAI_API_KEY="sk-..." \
+  ghcr.io/f/prompts.chat
+```
+
+## Custom logo
+
+Mount your logo file directly into the container's public directory:
+
+```bash
+docker run -d \
+  --name prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  -v ./my-logo.svg:/data/app/public/logo.svg \
+  -e PCHAT_NAME="My App" \
+  ghcr.io/f/prompts.chat
+```
+
+## Data persistence
+
+All persistent data is stored under `/data` inside the container:
+
+| Path | Contents |
+|------|---------|
+| `/data/postgres` | PostgreSQL database files |
+
+Always mount a named volume to preserve data across container restarts and upgrades:
+
+```bash
+docker run -d -v prompts-data:/data ghcr.io/f/prompts.chat
+```
+
+### Backup and restore
+
+<CodeGroup>
+
+```bash Backup
+docker exec prompts pg_dump -U prompts prompts > backup.sql
+```
+
+```bash Restore
+docker exec -i prompts psql -U prompts prompts < backup.sql
+```
+
+</CodeGroup>
+
+## Updating
+
+```bash
+# Pull the latest image
+docker pull ghcr.io/f/prompts.chat
+
+# Stop and remove the old container (data remains in the volume)
+docker stop prompts && docker rm prompts
+
+# Start a new container
+docker run -d \
+  --name prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  -e AUTH_SECRET="your-secret-key" \
+  ghcr.io/f/prompts.chat
+```
+
+## Building locally
+
+Build and run the image from source:
+
+```bash
+docker build -f docker/Dockerfile -t prompts.chat .
+docker run -p 4444:3000 -v prompts-data:/data prompts.chat
+```
+
+## Health check
+
+The container exposes a health check endpoint:
+
+```bash
+curl http://localhost:4444/api/health
+```
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2024-01-01T00:00:00.000Z",
+  "database": "connected"
+}
+```
+
+## Reverse proxy with Nginx
+
+For production, place the container behind a TLS-terminating reverse proxy:
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name prompts.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/prompts.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/prompts.example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:4444;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+## Resource requirements
+
+<Tabs>
+  <Tab title="Minimum">
+    | Resource | Amount |
+    |----------|--------|
+    | CPU | 1 core |
+    | RAM | 1 GB |
+    | Disk | 2 GB |
+  </Tab>
+  <Tab title="Recommended">
+    | Resource | Amount |
+    |----------|--------|
+    | CPU | 2 cores |
+    | RAM | 2 GB |
+    | Disk | 10 GB |
+  </Tab>
+</Tabs>
+
+## Security considerations
+
+<Warning>
+  Run through this checklist before exposing your instance to the internet.
+</Warning>
+
+1. **Always set `AUTH_SECRET`** — the auto-generated value resets on every container restart
+2. **Use HTTPS** — put a reverse proxy (Nginx, Caddy, Traefik) in front of the container
+3. **Limit exposed ports** — only expose port 4444 (or your chosen host port); do not expose the internal PostgreSQL port
+4. **Update regularly** — pull the latest image to receive security patches
+5. **Back up data** — schedule regular backups of the `/data` volume
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Container won't start">
+    Check the container logs for errors:
+
+    ```bash
+    docker logs prompts
+    ```
+
+    Ensure port 4444 is not already in use:
+
+    ```bash
+    lsof -i :4444
+    ```
+  </Accordion>
+
+  <Accordion title="Database connection errors">
+    PostgreSQL can take 30–60 seconds to initialize on the first run. Wait a moment and retry. To inspect the database process logs:
+
+    ```bash
+    docker exec prompts cat /var/log/supervisor/postgresql.log
+    ```
+  </Accordion>
+
+  <Accordion title="Authentication issues">
+    - Ensure `AUTH_SECRET` is set for production deployments
+    - For OAuth providers, verify that the callback URLs are configured correctly in your GitHub or Google app settings
+  </Accordion>
+
+  <Accordion title="Viewing all logs">
+    ```bash
+    # Stream all container logs
+    docker logs -f prompts
+
+    # Next.js application logs
+    docker exec prompts cat /var/log/supervisor/nextjs.log
+
+    # PostgreSQL logs
+    docker exec prompts cat /var/log/supervisor/postgresql.log
+    ```
+  </Accordion>
+
+  <Accordion title="Accessing the database directly">
+    ```bash
+    # Open a psql session inside the container
+    docker exec -it prompts psql -U prompts -d prompts
+
+    # Run a one-off query
+    docker exec prompts psql -U prompts -d prompts -c 'SELECT COUNT(*) FROM "Prompt"'
+    ```
+  </Accordion>
+</AccordionGroup>

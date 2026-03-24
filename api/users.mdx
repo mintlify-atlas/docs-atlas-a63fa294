@@ -1,0 +1,85 @@
+---
+title: "Users API"
+description: "User profiles and authenticated user data"
+---
+
+## Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/user/profile` | Yes | Get the current authenticated user |
+
+<Note>
+  Individual user public profiles are accessible at `/@:username` on the web. A dedicated public `/api/users/:username` endpoint is not exposed — use the prompts list endpoint with the author filter from the web client to retrieve a user's public prompts.
+</Note>
+
+---
+
+## GET /api/user/profile
+
+Return the profile of the currently authenticated user. Requires authentication.
+
+### Response
+
+<ResponseField name="id" type="string">Unique user ID (CUID).</ResponseField>
+<ResponseField name="name" type="string">Display name.</ResponseField>
+<ResponseField name="username" type="string">Unique username (alphanumeric and underscores, 1–30 characters).</ResponseField>
+<ResponseField name="email" type="string">Email address (only returned for the authenticated user).</ResponseField>
+<ResponseField name="avatar" type="string">Avatar URL, or `null` if not set.</ResponseField>
+<ResponseField name="role" type="string">Account role: `USER` or `ADMIN`.</ResponseField>
+<ResponseField name="createdAt" type="string">ISO 8601 account creation timestamp.</ResponseField>
+
+### Error responses
+
+| Status | Error | Cause |
+|--------|-------|-------|
+| 401 | `unauthorized` | Not authenticated |
+| 404 | `not_found` | User record not found |
+
+### Example
+
+<CodeGroup>
+
+```bash curl
+curl https://prompts.chat/api/user/profile \
+  -H "Authorization: Bearer pchat_your_api_key_here"
+```
+
+```typescript TypeScript
+const res = await fetch('https://prompts.chat/api/user/profile', {
+  headers: {
+    Authorization: 'Bearer pchat_your_api_key_here',
+  },
+});
+const user = await res.json();
+```
+
+</CodeGroup>
+
+```json Response
+{
+  "id": "cm1user123",
+  "name": "Jane Smith",
+  "username": "janesmith",
+  "email": "jane@example.com",
+  "avatar": "https://avatars.example.com/janesmith.jpg",
+  "role": "USER",
+  "createdAt": "2025-01-15T09:30:00.000Z"
+}
+```
+
+---
+
+## User fields (public context)
+
+When user data appears on prompts (as `author` or `contributors`), only the following public fields are included:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | User ID |
+| `name` | string | Display name |
+| `username` | string | Username |
+| `avatar` | string | Avatar URL |
+| `verified` | boolean | Whether the account is verified |
+
+The `email`, `role`, and `createdAt` fields are not exposed in public prompt responses.

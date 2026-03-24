@@ -1,0 +1,99 @@
+---
+title: "Self-hosting overview"
+description: "Deploy your own private prompt library for your organization with full control over data, branding, and authentication."
+---
+
+Self-hosting prompts.chat gives your organization a private, white-labeled prompt library that runs entirely on your own infrastructure. You control the data, the branding, and the authentication — nothing leaves your environment.
+
+<CardGroup cols={2}>
+  <Card title="Docker deployment" icon="docker" href="/self-hosting/docker">
+    Run a fully configured instance with a single `docker run` command. Includes a built-in PostgreSQL database.
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/self-hosting/quickstart">
+    Use the interactive `npx` wizard to scaffold and configure a new instance in under 10 minutes.
+  </Card>
+  <Card title="Manual setup" icon="wrench" href="/self-hosting/manual-setup">
+    Clone the repository and configure everything by hand for maximum control over the installation.
+  </Card>
+  <Card title="Feature flags" icon="toggle-left" href="/self-hosting/features">
+    Enable or disable capabilities like AI search, private prompts, comments, and MCP support.
+  </Card>
+</CardGroup>
+
+## What self-hosting gives you
+
+- **Full data privacy** — all prompts, users, and activity stay on your servers
+- **Custom branding** — set your own name, logo, colors, and domain
+- **Your own authentication** — GitHub, Google, Microsoft Entra ID, email/password, or any combination
+- **All features included** — the self-hosted version is functionally identical to prompts.chat
+- **No usage limits** — no seats, no rate limits, no subscription required
+
+## Capabilities
+
+<Info>
+  All of the following capabilities are available in a self-hosted instance and can be toggled independently via feature flags.
+</Info>
+
+- **Curated prompt library** — access 100+ high-quality, community-tested prompts for ChatGPT, Claude, Gemini, Llama, Mistral, and other AI models
+- **Discover and browse** — explore prompts by categories, tags, or AI-powered semantic search
+- **Create and share prompts** — submit prompts with support for text, structured (JSON/YAML), and media-enhanced formats
+- **Version control** — track prompt changes with built-in versioning and a change request system (similar to pull requests)
+- **Private prompts** — keep prompts private or share them with the community
+- **Voting and leaderboard** — upvote prompts and surface the most popular ones
+- **Multi-language support** — available in English, Spanish, Japanese, Turkish, Chinese, and more
+
+## System requirements
+
+| Requirement | Minimum version |
+|-------------|----------------|
+| Node.js | 24.x |
+| PostgreSQL | Any recent stable release |
+| npm | Bundled with Node.js 24.x |
+
+<Info>
+  The Docker image bundles PostgreSQL and manages it automatically. You only need to supply an external database when using a non-Docker deployment.
+</Info>
+
+## Deployment options
+
+<Tabs>
+  <Tab title="npx quickstart">
+    The fastest path for a new self-hosted instance. The `npx` wizard clones the repository, installs dependencies, and runs an interactive configuration wizard.
+
+    ```bash
+    npx prompts.chat new my-prompt-library
+    cd my-prompt-library
+    ```
+
+    The wizard walks you through branding, theme, authentication providers, supported languages, and feature flags. When it finishes you have a fully configured app ready to run.
+
+    See [Quickstart](/self-hosting/quickstart) for the full walkthrough.
+  </Tab>
+  <Tab title="Docker">
+    The simplest path for production deployments. A single `docker run` command starts the app with a bundled PostgreSQL database and persistent volume.
+
+    ```bash
+    docker run -d \
+      --name prompts \
+      -p 4444:3000 \
+      -v prompts-data:/data \
+      ghcr.io/f/prompts.chat
+    ```
+
+    Branding and features are configured through `PCHAT_*` environment variables — no code changes required.
+
+    See [Docker deployment](/self-hosting/docker) for the full reference.
+  </Tab>
+</Tabs>
+
+## Architecture
+
+A self-hosted prompts.chat instance consists of three components:
+
+| Component | Technology | Notes |
+|-----------|-----------|-------|
+| Application server | Next.js (App Router) | Handles both the UI and API routes |
+| Database | PostgreSQL with Prisma ORM | Stores prompts, users, votes, and comments |
+| Media storage | Local filesystem or S3 | Optional; only needed for media-enhanced prompts |
+
+The application and database are the only required components. S3-compatible storage (AWS S3, MinIO, DigitalOcean Spaces) is optional and used only if you enable media uploads.

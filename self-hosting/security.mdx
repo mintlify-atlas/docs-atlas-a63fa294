@@ -1,0 +1,210 @@
+---
+title: "Security"
+description: "Security best practices for your self-hosted prompts.chat deployment."
+---
+
+<Warning>
+  These recommendations are not optional for production deployments. An improperly secured instance exposes user data and authentication tokens.
+</Warning>
+
+## Authentication secret
+
+`AUTH_SECRET` is used by NextAuth.js to sign and verify session tokens. Without it, sessions are insecure and will be invalidated on every restart.
+
+<Steps>
+  <Step title="Generate a secure secret">
+    ```bash
+    openssl rand -base64 32
+    ```
+  </Step>
+
+  <Step title="Set it in your environment">
+    ```bash .env
+    AUTH_SECRET="<output from above>"
+    ```
+
+    For Docker:
+
+    ```bash
+    docker run -e AUTH_SECRET="$(openssl rand -base64 32)" ...
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Never use the placeholder value from `.env.example` (`your-super-secret-key-change-in-production`) in production. Rotate the secret if it has ever been committed to version control.
+</Warning>
+
+## HTTPS and reverse proxy
+
+Do not expose the Node.js process directly to the internet. Place a reverse proxy in front that terminates TLS.
+
+Popular options:
+
+<Columns cols={3}>
+  <Card title="Nginx" icon="server">
+    Full-featured web server. Manual certificate management or integrate with Certbot.
+  </Card>
+  <Card title="Caddy" icon="shield">
+    Automatic HTTPS with Let's Encrypt. Zero configuration for most deployments.
+  </Card>
+  <Card title="Traefik" icon="route">
+    Container-native proxy. Integrates directly with Docker labels.
+  </Card>
+</Columns>
+
+### Nginx configuration
+
+The following configuration proxies HTTPS traffic to prompts.chat running on port 4444:
+
+```nginx /etc/nginx/sites-available/prompts.conf
+server {
+    listen 443 ssl http2;
+    server_name prompts.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/prompts.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/prompts.example.com/privkey.pem;
+
+    location / {
+        proxy_pass http://localhost:4444;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+## Limit exposed ports
+
+Only expose the ports your reverse proxy needs. Do not bind the application port (default `3000` or `4444`) to a public interface.
+
+```bash
+# Bind only to localhost — not accessible from the internet
+docker run -p 127.0.0.1:4444:3000 ghcr.io/f/prompts.chat
+```
+
+Verify no unexpected ports are open:
+
+```bash
+ss -tlnp
+```
+
+## Authentication provider
+
+### Choosing a provider
+
+For private or internal instances, OAuth providers (GitHub, Google, Azure AD) are generally more secure than email/password (`credentials`), as they delegate authentication to a trusted identity provider and avoid storing password hashes.
+
+Configure providers in `prompts.config.ts`:
+
+```typescript prompts.config.ts
+export default defineConfig({
+  auth: {
+    provider: "github",      // "credentials" | "github" | "google" | "azure"
+    allowRegistration: false, // Restrict new sign-ups
+  },
+});
+```
+
+### Restricting registration
+
+Set `allowRegistration: false` to prevent new users from signing up. Existing accounts can still log in. This is recommended for private team instances.
+
+## API key security
+
+Users can generate personal API keys from the settings page. API keys grant full access to the API on behalf of the user.
+
+- Rotate API keys from **Settings → API** if a key is compromised.
+- Do not share API keys or commit them to version control.
+- Treat API keys with the same sensitivity as passwords.
+
+## PostgreSQL security
+
+<Steps>
+  <Step title="Use a strong password">
+    Generate a strong database password:
+
+    ```bash
+    openssl rand -base64 24
+    ```
+  </Step>
+
+  <Step title="Limit network access">
+    Bind PostgreSQL to `localhost` or a private network interface. Never expose port `5432` to the public internet.
+
+    In `postgresql.conf`:
+
+    ```
+    listen_addresses = 'localhost'
+    ```
+  </Step>
+
+  <Step title="Use a dedicated database user">
+    Create a user with only the permissions the app needs:
+
+    ```sql
+    CREATE USER prompts_app WITH PASSWORD 'strong-password';
+    GRANT CONNECT ON DATABASE prompts_chat TO prompts_app;
+    GRANT USAGE ON SCHEMA public TO prompts_app;
+    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO prompts_app;
+    GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO prompts_app;
+    ```
+  </Step>
+</Steps>
+
+## Environment variable management
+
+<Warning>
+  Never commit `.env` files to version control. Add `.env` to `.gitignore` immediately.
+</Warning>
+
+For production environments, use a dedicated secrets manager instead of plain `.env` files:
+
+<CodeGroup>
+
+```bash AWS Secrets Manager
+aws secretsmanager create-secret \
+  --name prompts-chat/prod \
+  --secret-string '{"AUTH_SECRET":"...","DATABASE_URL":"..."}'
+```
+
+```bash Doppler
+doppler secrets set AUTH_SECRET=$(openssl rand -base64 32)
+doppler run -- npm run start
+```
+
+</CodeGroup>
+
+<Tip>
+  Audit your secrets periodically. Remove unused OAuth apps, rotate `AUTH_SECRET` after any suspected exposure, and check that old `.env` files have not been committed in git history (`git log --all --full-history -- .env`).
+</Tip>
+
+## Regular updates
+
+Keep your instance up to date to receive security patches. See [Updating](/self-hosting/updating) for the full update procedure.
+
+```bash
+# Docker — pull latest image
+docker pull ghcr.io/f/prompts.chat
+
+# Manual — pull latest source
+git pull origin main && npm install && npm run db:deploy && npm run build
+```
+
+## Checklist
+
+<Steps>
+  <Step title="Set AUTH_SECRET to a randomly generated value" />
+  <Step title="Enable HTTPS via a reverse proxy" />
+  <Step title="Bind the app port to localhost only" />
+  <Step title="Use a strong PostgreSQL password and restrict network access" />
+  <Step title="Set allowRegistration: false for private instances" />
+  <Step title="Store secrets in a secrets manager, not in .env files" />
+  <Step title="Enable automated backups" />
+  <Step title="Keep the image or dependencies up to date" />
+</Steps>

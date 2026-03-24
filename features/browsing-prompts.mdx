@@ -1,0 +1,135 @@
+---
+title: "Browsing prompts"
+description: "Navigate the prompt library using filters, sort orders, the discover page, and your subscription feed."
+---
+
+The prompt library lives at [prompts.chat/prompts](https://prompts.chat/prompts). It surfaces every public, non-deleted prompt as a masonry card grid with real-time infinite scroll.
+
+## The prompts page
+
+<Steps>
+  <Step title="Open the library">
+    Go to [prompts.chat/prompts](https://prompts.chat/prompts). The page loads the 24 most-recently-created prompts by default.
+  </Step>
+  <Step title="Filter the results">
+    Use the sidebar on the left to narrow results by category, tag, and prompt type. Multiple tags are supported — they are comma-separated in the URL (`?tag=coding,typescript`).
+  </Step>
+  <Step title="Change the sort order">
+    Choose a sort order from the filter panel:
+
+    | Sort value | Behaviour |
+    |---|---|
+    | `newest` (default) | Most recently created first |
+    | `oldest` | Oldest prompts first |
+    | `upvotes` | Most-voted prompts first |
+  </Step>
+  <Step title="Search">
+    Type in the search box to filter prompts. You can enter multiple comma-separated keywords (`?q=coding,python`) or switch on AI semantic search for natural-language queries.
+  </Step>
+</Steps>
+
+## Prompt cards
+
+Each card in the grid displays:
+
+<CardGroup cols={2}>
+  <Card title="Title & lock icon">
+    The prompt title. A lock icon appears on private prompts visible only to their author.
+  </Card>
+  <Card title="Type badge">
+    Shows the prompt type: TEXT, IMAGE, VIDEO, AUDIO, STRUCTURED, SKILL, or TASTE.
+  </Card>
+  <Card title="Content preview">
+    A truncated preview of the prompt body. Structured (JSON/YAML) prompts render with syntax highlighting.
+  </Card>
+  <Card title="Tags">
+    Up to three coloured tag chips. Clicking a tag opens the filtered prompt list for that tag.
+  </Card>
+  <Card title="Author">
+    Avatar, username, and a verification checkmark for verified authors. Additional contributors are shown as a count.
+  </Card>
+  <Card title="Vote count & actions">
+    Upvote count, a copy button, and a run/download button depending on prompt type.
+  </Card>
+</CardGroup>
+
+## Filtering by URL parameters
+
+All filters are reflected in the URL, so they are shareable and bookmarkable.
+
+```
+https://prompts.chat/prompts?q=code+review&type=TEXT&category=<id>&tag=typescript&sort=upvotes
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `q` | string | Keyword search (comma-separated for multiple terms) |
+| `type` | enum | `TEXT`, `IMAGE`, `VIDEO`, `AUDIO`, `STRUCTURED`, `SKILL`, `TASTE` |
+| `category` | string | Category ID |
+| `tag` | string | Tag slug or comma-separated slugs |
+| `sort` | enum | `newest` \| `oldest` \| `upvotes` |
+| `ai` | `1` | Enable AI semantic search (requires `OPENAI_API_KEY`) |
+
+## Discovery page
+
+The [/discover](https://prompts.chat/discover) page surfaces curated sections without needing any filters:
+
+<Tabs>
+  <Tab title="Featured">
+    Prompts manually featured by admins, sorted by `featuredAt` descending.
+  </Tab>
+  <Tab title="Today's most upvoted">
+    Prompts that received at least one vote today, sorted by vote count. Resets at midnight UTC.
+  </Tab>
+  <Tab title="Latest">
+    The 15 most recently created public prompts.
+  </Tab>
+  <Tab title="Recently updated">
+    Prompts ordered by their `updatedAt` timestamp — useful for finding improved prompts.
+  </Tab>
+  <Tab title="Most contributed">
+    Prompts with the highest number of community contributors.
+  </Tab>
+</Tabs>
+
+## Feed (subscription-based)
+
+The [/feed](https://prompts.chat/feed) page shows prompts from categories you subscribe to.
+
+<Steps>
+  <Step title="Subscribe to a category">
+    Open any category page and click **Subscribe**. Subscriptions are stored per user account.
+  </Step>
+  <Step title="View your feed">
+    Navigate to [prompts.chat/feed](https://prompts.chat/feed). The page fetches the 30 most recent public prompts from all your subscribed categories.
+  </Step>
+  <Step title="Manage subscriptions">
+    Your subscribed categories appear as badge chips at the top of the feed. Click any badge to go to that category page.
+  </Step>
+</Steps>
+
+<Note>
+  The feed page requires authentication. Unauthenticated users are redirected to `/login`.
+</Note>
+
+## Keyword search vs. AI semantic search
+
+<Tabs>
+  <Tab title="Keyword search">
+    The default search mode. Matches the query string against prompt `title`, `content`, and `description` using a case-insensitive `ILIKE` query. Supports multiple comma-separated terms.
+
+    ```
+    /prompts?q=email+template
+    /prompts?q=python,async,concurrency
+    ```
+  </Tab>
+  <Tab title="AI semantic search">
+    Enabled when `OPENAI_API_KEY` is configured and the user adds `?ai=1` to the URL (or toggles the AI search switch in the filter panel). Converts the query to an embedding vector and returns the most semantically similar prompts — even if the exact words do not appear in the prompt text.
+
+    ```
+    /prompts?q=fix+my+code&ai=1
+    ```
+
+    See [AI-powered search](/features/ai-search) for full details.
+  </Tab>
+</Tabs>

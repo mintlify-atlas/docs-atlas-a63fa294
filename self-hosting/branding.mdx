@@ -1,0 +1,194 @@
+---
+title: "Branding"
+description: "Customize your instance with your own brand identity — name, logo, colors, and UI style."
+---
+
+Every visible element of a self-hosted prompts.chat instance can be replaced with your own brand. Configuration lives under the `branding` and `theme` keys in `prompts.config.ts`.
+
+## Branding options
+
+<ParamField path="branding.name" type="string" required>
+  Application name shown in the header, browser tab, and `<title>` tags.
+</ParamField>
+
+<ParamField path="branding.logo" type="string" required>
+  Path to the logo served from the `public/` directory. SVG is recommended for crisp rendering at any size. Example: `"/logo.svg"`.
+</ParamField>
+
+<ParamField path="branding.logoDark" type="string">
+  Alternate logo for dark mode. Falls back to `logo` when not set.
+</ParamField>
+
+<ParamField path="branding.favicon" type="string" required>
+  Path to the favicon relative to `public/`. Can be the same file as `logo`. Example: `"/logo.svg"`.
+</ParamField>
+
+<ParamField path="branding.description" type="string" required>
+  One-line description of your instance. Displayed in the homepage hero and used as the default Open Graph description.
+</ParamField>
+
+<ParamField path="branding.appStoreUrl" type="string">
+  Optional link to an App Store listing. Remove this field when `useCloneBranding` is `true`.
+</ParamField>
+
+<ParamField path="branding.chromeExtensionUrl" type="string">
+  Optional link to a Chrome Web Store extension. Remove this field when `useCloneBranding` is `true`.
+</ParamField>
+
+## Theme options
+
+<ParamField path="theme.radius" type="'none' | 'sm' | 'md' | 'lg'" required>
+  Global border radius for cards, buttons, and inputs.
+
+  | Value | Appearance |
+  |-------|------------|
+  | `none` | Sharp square corners |
+  | `sm` | Slightly rounded |
+  | `md` | Moderately rounded |
+  | `lg` | Pill-style corners |
+</ParamField>
+
+<ParamField path="theme.variant" type="'flat' | 'default' | 'brutal'" required>
+  Overall UI style preset.
+
+  | Value | Appearance |
+  |-------|------------|
+  | `flat` | Minimal, borderless, low-shadow surfaces |
+  | `default` | Standard shadowed component style |
+  | `brutal` | High-contrast with bold visible borders |
+</ParamField>
+
+<ParamField path="theme.density" type="'compact' | 'default' | 'comfortable'" required>
+  Controls padding and spacing throughout the UI.
+</ParamField>
+
+<ParamField path="theme.colors.primary" type="string" required>
+  Primary brand color. Accepts a hex string (e.g. `"#6366f1"`) or a CSS `oklch()` value.
+</ParamField>
+
+## Configuration
+
+<Tabs>
+  <Tab title="prompts.config.ts">
+    ```typescript
+    import { defineConfig } from "@/lib/config";
+
+    const useCloneBranding = true;
+
+    export default defineConfig({
+      branding: {
+        name: "Acme Prompts",
+        logo: "/acme-logo.svg",
+        logoDark: "/acme-logo-dark.svg",
+        favicon: "/acme-logo.svg",
+        description: "Our team's internal AI prompt library",
+      },
+
+      theme: {
+        radius: "md",
+        variant: "default",
+        density: "default",
+        colors: {
+          primary: "#0ea5e9",
+        },
+      },
+
+      homepage: {
+        useCloneBranding,
+        achievements: { enabled: !useCloneBranding },
+        sponsors:     { enabled: !useCloneBranding, items: [] },
+      },
+
+      // ... rest of config
+    });
+    ```
+  </Tab>
+  <Tab title="Docker env vars">
+    ```bash
+    docker run -d \
+      --name my-prompts \
+      -p 4444:3000 \
+      -v prompts-data:/data \
+      -e PCHAT_NAME="Acme Prompts" \
+      -e PCHAT_DESCRIPTION="Our team's internal AI prompt library" \
+      -e PCHAT_COLOR="#0ea5e9" \
+      -e PCHAT_THEME_RADIUS="md" \
+      -e PCHAT_THEME_VARIANT="default" \
+      -e PCHAT_THEME_DENSITY="default" \
+      ghcr.io/f/prompts.chat
+    ```
+
+    <Note>
+      Setting `PCHAT_NAME` automatically activates clone branding mode, hiding all prompts.chat-specific homepage content.
+    </Note>
+  </Tab>
+</Tabs>
+
+## Logo requirements
+
+Logos are served as static files from the `public/` directory.
+
+<Steps>
+  <Step title="Prepare your logo">
+    SVG format is strongly recommended — it scales perfectly at any resolution and is small in file size. PNG with a transparent background is acceptable as a fallback.
+  </Step>
+  <Step title="Place files in public/">
+    Copy your logo into the `public/` directory at the project root:
+
+    ```bash
+    public/
+    ├── logo.svg          # Light mode logo
+    └── logo-dark.svg     # Dark mode logo (optional)
+    ```
+  </Step>
+  <Step title="Reference paths in config">
+    ```typescript
+    branding: {
+      logo: "/logo.svg",
+      logoDark: "/logo-dark.svg",
+      favicon: "/logo.svg",
+    }
+    ```
+
+    Paths are relative to the `public/` directory — include the leading `/`.
+  </Step>
+</Steps>
+
+### Mounting a custom logo in Docker
+
+Mount your local logo file into the container at build time:
+
+```bash
+docker run -d \
+  --name prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  -v ./my-logo.svg:/data/app/public/logo.svg \
+  -e PCHAT_NAME="My App" \
+  ghcr.io/f/prompts.chat
+```
+
+## Docker environment variable reference
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `PCHAT_NAME` | `branding.name` | App name | `My Prompt Library` |
+| `PCHAT_DESCRIPTION` | `branding.description` | App description | `Collect, organize...` |
+| `PCHAT_LOGO` | `branding.logo` | Logo path (in `public/`) | `/logo.svg` |
+| `PCHAT_LOGO_DARK` | `branding.logoDark` | Dark mode logo path | Same as `PCHAT_LOGO` |
+| `PCHAT_FAVICON` | `branding.favicon` | Favicon path | `/logo.svg` |
+| `PCHAT_COLOR` | `theme.colors.primary` | Primary color (hex) | `#6366f1` |
+| `PCHAT_THEME_RADIUS` | `theme.radius` | Border radius | `sm` |
+| `PCHAT_THEME_VARIANT` | `theme.variant` | UI style | `default` |
+| `PCHAT_THEME_DENSITY` | `theme.density` | Spacing density | `default` |
+
+## Clone branding mode
+
+When `useCloneBranding` is `true` in `prompts.config.ts` (or triggered automatically by setting `PCHAT_NAME` via Docker), the homepage switches to full white-label mode:
+
+- Your `branding.name` is used as the hero headline
+- Your `branding.description` appears as the subtitle
+- Your logo becomes the background watermark
+- All prompts.chat-specific elements are hidden (achievements, GitHub stars, sponsor links, "Deploy" CTA)
+
+See the [Configuration reference](/self-hosting/configuration#clone-branding-mode) for the full list of affected elements.

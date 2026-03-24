@@ -1,0 +1,164 @@
+---
+title: "Feature flags"
+description: "Enable or disable individual features in your prompts.chat instance."
+---
+
+The `features` block in `prompts.config.ts` controls which platform capabilities are active. All flags are boolean and can also be toggled via Docker environment variables without a code change.
+
+## Configuration
+
+<Tabs>
+  <Tab title="prompts.config.ts">
+    ```typescript
+    import { defineConfig } from "@/lib/config";
+
+    export default defineConfig({
+      // ...
+      features: {
+        privatePrompts: true,
+        changeRequests: true,
+        categories: true,
+        tags: true,
+        aiSearch: false,      // requires OPENAI_API_KEY
+        aiGeneration: false,  // requires OPENAI_API_KEY
+        mcp: false,
+        comments: true,
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Docker env vars">
+    ```bash
+    docker run -d \
+      --name prompts \
+      -p 4444:3000 \
+      -v prompts-data:/data \
+      -e PCHAT_FEATURE_PRIVATE_PROMPTS="true" \
+      -e PCHAT_FEATURE_CHANGE_REQUESTS="true" \
+      -e PCHAT_FEATURE_CATEGORIES="true" \
+      -e PCHAT_FEATURE_TAGS="true" \
+      -e PCHAT_FEATURE_COMMENTS="true" \
+      -e PCHAT_FEATURE_AI_SEARCH="false" \
+      -e PCHAT_FEATURE_AI_GENERATION="false" \
+      -e PCHAT_FEATURE_MCP="false" \
+      ghcr.io/f/prompts.chat
+    ```
+  </Tab>
+</Tabs>
+
+## Feature reference
+
+<ParamField path="features.privatePrompts" type="boolean" required>
+  **Default:** `true`
+
+  Allows users to mark individual prompts as private. Private prompts are only visible to their owner.
+
+  Disable this if you want all prompts in your instance to be public by default and discoverable by everyone.
+</ParamField>
+
+<ParamField path="features.changeRequests" type="boolean" required>
+  **Default:** `true`
+
+  Enables the versioning and change request system. Community members can propose edits to existing prompts, which the author can accept or reject — similar to pull requests in a code repository.
+
+  Disable this for a simpler, read-only prompt library where prompts cannot be collaboratively revised.
+</ParamField>
+
+<ParamField path="features.categories" type="boolean" required>
+  **Default:** `true`
+
+  Enables prompt categories. When active, prompts can be assigned to categories and users can browse by category. Disabling this also hides category navigation from the header.
+</ParamField>
+
+<ParamField path="features.tags" type="boolean" required>
+  **Default:** `true`
+
+  Enables prompt tags. Tags offer freeform keyword classification in addition to categories. Disabling this removes the tags browsing page and the tag input from the prompt editor.
+</ParamField>
+
+<ParamField path="features.aiSearch" type="boolean">
+  **Default:** `false`
+
+  Enables AI-powered semantic search using OpenAI embeddings. Instead of (or alongside) keyword matching, users can search by meaning and intent.
+
+  <Warning>
+    Requires the `OPENAI_API_KEY` environment variable to be set. Enabling this without the API key will cause search errors.
+  </Warning>
+</ParamField>
+
+<ParamField path="features.aiGeneration" type="boolean">
+  **Default:** `false`
+
+  Enables AI-assisted prompt generation. Users can describe what they want and the system will generate a prompt draft using OpenAI.
+
+  <Warning>
+    Requires the `OPENAI_API_KEY` environment variable to be set.
+  </Warning>
+</ParamField>
+
+<ParamField path="features.mcp" type="boolean">
+  **Default:** `false`
+
+  Enables the MCP (Model Context Protocol) server and allows users to generate personal API keys. When active, each user gets a unique MCP endpoint they can connect to from compatible AI clients.
+</ParamField>
+
+<ParamField path="features.comments" type="boolean">
+  **Default:** `true`
+
+  Enables the comments section on individual prompt pages. Users can discuss, ask questions, and leave feedback on prompts.
+</ParamField>
+
+## AI features setup
+
+Both `aiSearch` and `aiGeneration` depend on the OpenAI API.
+
+<Steps>
+  <Step title="Obtain an OpenAI API key">
+    Create an account at [platform.openai.com](https://platform.openai.com/) and generate an API key.
+  </Step>
+  <Step title="Set the environment variable">
+    ```bash
+    OPENAI_API_KEY="sk-..."
+    ```
+
+    For Docker:
+
+    ```bash
+    docker run -d \
+      --name prompts \
+      -p 4444:3000 \
+      -v prompts-data:/data \
+      -e OPENAI_API_KEY="sk-..." \
+      -e PCHAT_FEATURE_AI_SEARCH="true" \
+      -e PCHAT_FEATURE_AI_GENERATION="true" \
+      ghcr.io/f/prompts.chat
+    ```
+  </Step>
+  <Step title="Enable the features in config">
+    ```typescript
+    features: {
+      aiSearch: true,
+      aiGeneration: true,
+    }
+    ```
+  </Step>
+</Steps>
+
+<Note>
+  Enabling AI features will incur OpenAI API usage costs. Semantic search generates an embedding for every search query; AI generation calls a completion endpoint for each generation request.
+</Note>
+
+## Docker environment variable reference
+
+| Variable | Config path | Default |
+|----------|-------------|----------|
+| `PCHAT_FEATURE_PRIVATE_PROMPTS` | `features.privatePrompts` | `true` |
+| `PCHAT_FEATURE_CHANGE_REQUESTS` | `features.changeRequests` | `true` |
+| `PCHAT_FEATURE_CATEGORIES` | `features.categories` | `true` |
+| `PCHAT_FEATURE_TAGS` | `features.tags` | `true` |
+| `PCHAT_FEATURE_COMMENTS` | `features.comments` | `true` |
+| `PCHAT_FEATURE_AI_SEARCH` | `features.aiSearch` | `false` |
+| `PCHAT_FEATURE_AI_GENERATION` | `features.aiGeneration` | `false` |
+| `PCHAT_FEATURE_MCP` | `features.mcp` | `false` |
+
+All `PCHAT_FEATURE_*` variables accept `true` or `false` (or `1`/`0`).

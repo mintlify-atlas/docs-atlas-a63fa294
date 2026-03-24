@@ -1,0 +1,208 @@
+---
+title: "MCP server"
+description: "Use prompts.chat as a Model Context Protocol server in Claude Desktop, Cursor, Windsurf, and other AI tools."
+---
+
+## What is MCP?
+
+The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) is an open standard that lets AI tools connect to external data sources and services. By connecting your AI tool to the prompts.chat MCP server, you can search the entire prompt library, retrieve prompts with variable substitution, save new prompts, and manage Agent Skills — all without leaving your editor.
+
+## Connect to the MCP server
+
+There are two ways to connect: remote (no installation required) or local via `npx`.
+
+<Tabs>
+  <Tab title="Remote (recommended)">
+    Connect directly to the hosted prompts.chat MCP server. No local installation required.
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Local (npx)">
+    Run the MCP server locally using `npx`. Node.js 18 or later is required.
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "command": "npx",
+          "args": ["-y", "prompts.chat", "mcp"]
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Client configuration
+
+Paste the appropriate config block into your client's MCP settings file.
+
+<Tabs>
+  <Tab title="Claude Desktop">
+    Open `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows) and add the `mcpServers` entry:
+
+    ```json claude_desktop_config.json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+
+    Restart Claude Desktop after saving.
+  </Tab>
+  <Tab title="Cursor">
+    Open **Cursor Settings → MCP** and add a new server, or edit `~/.cursor/mcp.json` directly:
+
+    ```json mcp.json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windsurf">
+    Edit `~/.codeium/windsurf/mcp_config.json`:
+
+    ```json mcp_config.json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Authentication
+
+Reading and searching prompts does not require authentication. To save prompts or skills to your account, you need an API key.
+
+<Steps>
+  <Step title="Get your API key">
+    Go to [prompts.chat/settings](https://prompts.chat/settings) and generate an API key under the **API** section.
+  </Step>
+  <Step title="Add the key to your config">
+    Pass your API key using the `PROMPTS_API_KEY` environment variable or as a request header.
+
+    <Tabs>
+      <Tab title="Environment variable">
+        ```bash
+        export PROMPTS_API_KEY=your_api_key_here
+        ```
+
+        For the local `npx` transport, add it to the MCP config:
+
+        ```json
+        {
+          "mcpServers": {
+            "prompts.chat": {
+              "command": "npx",
+              "args": ["-y", "prompts.chat", "mcp"],
+              "env": {
+                "PROMPTS_API_KEY": "your_api_key_here"
+              }
+            }
+          }
+        }
+        ```
+      </Tab>
+      <Tab title="Request header">
+        For the remote transport, add the key as a header in your client config:
+
+        ```json
+        {
+          "mcpServers": {
+            "prompts.chat": {
+              "url": "https://prompts.chat/api/mcp",
+              "headers": {
+                "PROMPTS_API_KEY": "your_api_key_here"
+              }
+            }
+          }
+        }
+        ```
+      </Tab>
+    </Tabs>
+  </Step>
+</Steps>
+
+## Available tools
+
+Once connected, your AI tool has access to the following MCP tools.
+
+### Prompt tools
+
+<ParamField path="search_prompts" type="tool">
+  Search prompts by keyword, category, tag, or type. Returns a list of matching prompts with titles, descriptions, and authors.
+</ParamField>
+
+<ParamField path="get_prompt" type="tool">
+  Retrieve the full content of a prompt by ID. Supports variable substitution — pass values for any `${variable}` placeholders in the prompt.
+</ParamField>
+
+<ParamField path="save_prompt" type="tool">
+  Save a new prompt to your prompts.chat account. Requires an API key.
+</ParamField>
+
+<ParamField path="improve_prompt" type="tool">
+  Enhance an existing prompt using AI. Pass the original prompt text and receive an improved, more structured version.
+</ParamField>
+
+### Skill tools
+
+<ParamField path="search_skills" type="tool">
+  Search for Agent Skills by keyword, category, or tag.
+</ParamField>
+
+<ParamField path="get_skill" type="tool">
+  Retrieve a skill with all its files — the main `SKILL.md`, reference docs, scripts, and configuration.
+</ParamField>
+
+<ParamField path="save_skill" type="tool">
+  Create a new multi-file skill on prompts.chat. Requires an API key.
+</ParamField>
+
+<ParamField path="add_file_to_skill" type="tool">
+  Add a new file to an existing skill.
+</ParamField>
+
+<ParamField path="update_skill_file" type="tool">
+  Update the content of a file in an existing skill.
+</ParamField>
+
+<ParamField path="remove_file_from_skill" type="tool">
+  Remove a file from an existing skill.
+</ParamField>
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Claude Code plugin" icon="plug" href="/integrations/claude-plugin">
+    Install the Claude Code plugin for slash commands and auto-activating skills
+  </Card>
+  <Card title="CLI" icon="terminal" href="/integrations/cli">
+    Browse and copy prompts directly from your terminal
+  </Card>
+  <Card title="API reference" icon="code" href="/api/mcp-overview">
+    Full MCP protocol and endpoint reference
+  </Card>
+  <Card title="API authentication" icon="key" href="/api/authentication">
+    Learn how API key authentication works
+  </Card>
+</CardGroup>

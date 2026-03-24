@@ -1,0 +1,177 @@
+---
+title: "MCP protocol overview"
+description: "Use prompts.chat as a Model Context Protocol server in your AI tools"
+---
+
+The [Model Context Protocol](https://modelcontextprotocol.io) (MCP) is an open standard that lets AI tools connect to external data sources and services. By connecting prompts.chat as an MCP server, your AI assistant can search, retrieve, and save prompts directly from your workflow.
+
+**MCP server endpoint:**
+
+```
+https://prompts.chat/api/mcp
+```
+
+## Connection methods
+
+### Remote (recommended)
+
+Connect directly to the hosted MCP server. No local installation required.
+
+```json
+{
+  "mcpServers": {
+    "prompts.chat": {
+      "url": "https://prompts.chat/api/mcp"
+    }
+  }
+}
+```
+
+### Local via npx
+
+Run the MCP server locally using the official CLI package.
+
+```json
+{
+  "mcpServers": {
+    "prompts.chat": {
+      "command": "npx",
+      "args": ["-y", "prompts.chat", "mcp"]
+    }
+  }
+}
+```
+
+## Authentication
+
+Read-only MCP tools work without authentication. To use tools that save prompts or skills (`save_prompt`, `save_skill`, etc.), set your API key:
+
+```bash
+export PROMPTS_API_KEY=pchat_your_api_key_here
+```
+
+Get your API key from [prompts.chat/settings](https://prompts.chat/settings). See [Authentication](/api/authentication) for details.
+
+## Client configuration
+
+<Tabs>
+  <Tab title="Claude Desktop">
+    Edit `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows):
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+
+    To include authentication:
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp",
+          "headers": {
+            "PROMPTS_API_KEY": "pchat_your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Cursor">
+    Edit `.cursor/mcp.json` in your project or `~/.cursor/mcp.json` globally:
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+
+    To include authentication:
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "command": "npx",
+          "args": ["-y", "prompts.chat", "mcp"],
+          "env": {
+            "PROMPTS_API_KEY": "pchat_your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windsurf">
+    Edit `~/.codeium/windsurf/mcp_config.json`:
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+
+    To include authentication:
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "command": "npx",
+          "args": ["-y", "prompts.chat", "mcp"],
+          "env": {
+            "PROMPTS_API_KEY": "pchat_your_api_key_here"
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Claude Code">
+    Use the official Claude Code plugin for the best experience:
+
+    ```
+    /plugin marketplace add f/prompts.chat
+    /plugin install prompts.chat@prompts.chat
+    ```
+
+    Or configure manually:
+
+    ```json
+    {
+      "mcpServers": {
+        "prompts.chat": {
+          "url": "https://prompts.chat/api/mcp"
+        }
+      }
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Available tools
+
+Once connected, your AI assistant has access to tools for searching and managing prompts and skills. See [MCP tools reference](/api/mcp-tools) for the complete list with parameters and examples.
+
+<Columns cols={2}>
+  <Card title="Prompt tools" icon="message-square" href="/api/mcp-tools">
+    `search_prompts`, `get_prompt`, `save_prompt`, `improve_prompt`
+  </Card>
+  <Card title="Skill tools" icon="layers" href="/api/mcp-tools">
+    `search_skills`, `get_skill`, `save_skill`, `add_file_to_skill`, `update_skill_file`, `remove_file_from_skill`
+  </Card>
+</Columns>

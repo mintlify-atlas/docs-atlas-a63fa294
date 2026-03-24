@@ -1,0 +1,234 @@
+---
+title: "Claude Code plugin"
+description: "Access prompts.chat directly in Claude Code with slash commands, agents, and auto-activating skills."
+---
+
+The prompts.chat Claude Code plugin adds slash commands, agents, and auto-activating skills to [Claude Code](https://code.claude.com). You can search prompts, retrieve them with variable substitution, save new ones, and manage Agent Skills — all from inside your terminal.
+
+## Installation
+
+<Steps>
+  <Step title="Add the prompts.chat marketplace">
+    Run the following in Claude Code to register the prompts.chat plugin marketplace:
+
+    ```
+    /plugin marketplace add f/prompts.chat
+    ```
+  </Step>
+  <Step title="Install the plugin">
+    Install the plugin from the marketplace:
+
+    ```
+    /plugin install prompts.chat@prompts.chat
+    ```
+  </Step>
+  <Step title="Set your API key (optional)">
+    An API key is only required to save prompts or skills to your account. Get one at [prompts.chat/settings](https://prompts.chat/settings), then set it as an environment variable:
+
+    ```bash
+    export PROMPTS_API_KEY=your_api_key_here
+    ```
+  </Step>
+</Steps>
+
+## Commands
+
+### Search prompts
+
+Use `/prompts.chat:prompts` to search the prompt library:
+
+```
+/prompts.chat:prompts <query>
+/prompts.chat:prompts <query> --type IMAGE
+/prompts.chat:prompts <query> --category coding
+/prompts.chat:prompts <query> --tag productivity
+```
+
+**Options**
+
+| Option | Values | Description |
+|--------|--------|-------------|
+| `--type` | `TEXT`, `STRUCTURED`, `IMAGE`, `VIDEO`, `AUDIO` | Filter by prompt type |
+| `--category` | category slug | Filter by category |
+| `--tag` | tag slug | Filter by tag |
+
+**Examples**
+
+```
+/prompts.chat:prompts code review
+/prompts.chat:prompts writing assistant --category writing
+/prompts.chat:prompts midjourney --type IMAGE
+/prompts.chat:prompts react developer --tag coding
+/prompts.chat:prompts data analysis --category productivity
+```
+
+After finding a prompt, retrieve its full content by ID:
+
+```
+/prompts.chat:prompts get <prompt-id>
+```
+
+This fetches the prompt and prompts you to fill in any variables.
+
+To save a prompt to your account:
+
+```
+/prompts.chat:prompts save "My Prompt Title" --content "Your prompt content here..."
+```
+
+To improve a prompt with AI:
+
+```
+/prompts.chat:prompts improve "Write a story about..."
+```
+
+### Search skills
+
+Use `/prompts.chat:skills` to search Agent Skills:
+
+```
+/prompts.chat:skills <query>
+/prompts.chat:skills <query> --category coding
+/prompts.chat:skills <query> --tag automation
+```
+
+**Options**
+
+| Option | Values | Description |
+|--------|--------|-------------|
+| `--category` | category slug | Filter by category |
+| `--tag` | tag slug | Filter by tag |
+
+**Examples**
+
+```
+/prompts.chat:skills testing automation
+/prompts.chat:skills documentation --category coding
+/prompts.chat:skills api integration
+```
+
+Get all files for a skill by ID:
+
+```
+/prompts.chat:skills get <skill-id>
+```
+
+Download and install a skill to your workspace:
+
+```
+/prompts.chat:skills install <skill-id>
+```
+
+This saves the skill files to `.claude/prompts.chat:skills/{slug}/`.
+
+Create a new skill on prompts.chat (requires API key):
+
+```
+/prompts.chat:skills create "My Skill Title" --description "What this skill does"
+```
+
+## Agents
+
+The plugin includes two agents for more complex, multi-step workflows.
+
+<CardGroup cols={2}>
+  <Card title="prompt-manager" icon="wand-magic-sparkles">
+    Search for prompts, retrieve them, fill in variables, save new prompts to your account, and improve prompts with AI.
+  </Card>
+  <Card title="skill-manager" icon="puzzle-piece">
+    Search for Agent Skills, get skill files, install skills to your workspace, create new multi-file skills, and manage skill file contents.
+  </Card>
+</CardGroup>
+
+To use an agent, ask Claude Code naturally — for example:
+
+```
+Find me a good code review prompt for TypeScript
+```
+
+```
+Install the best testing automation skill available
+```
+
+Claude Code will automatically invoke the appropriate agent.
+
+## Auto-activating skills
+
+The plugin includes two skills that activate automatically based on what you ask.
+
+### Prompt lookup
+
+Activates automatically when you:
+- Ask for prompt templates
+- Want to search for prompts
+- Need to improve a prompt
+- Mention prompts.chat
+
+### Skill lookup
+
+Activates automatically when you:
+- Ask for Agent Skills
+- Want to extend Claude's capabilities
+- Need to install a skill
+- Mention skills for Claude
+
+<Note>
+  You don't need to call these skills manually. Claude Code detects the right moment to use them based on your request.
+</Note>
+
+## MCP tools
+
+The plugin connects to the prompts.chat MCP server and exposes the following tools to Claude Code.
+
+**Prompt tools**
+
+| Tool | Description |
+|------|-------------|
+| `search_prompts` | Search prompts by keyword, category, tag, or type |
+| `get_prompt` | Retrieve a prompt with variable substitution |
+| `save_prompt` | Save a new prompt (requires API key) |
+| `improve_prompt` | Enhance prompts using AI |
+
+**Skill tools**
+
+| Tool | Description |
+|------|-------------|
+| `search_skills` | Search for Agent Skills |
+| `get_skill` | Get a skill with all its files |
+| `save_skill` | Create multi-file skills (requires API key) |
+| `add_file_to_skill` | Add a file to an existing skill |
+| `update_skill_file` | Update a file in a skill |
+| `remove_file_from_skill` | Remove a file from a skill |
+
+## Plugin structure
+
+The plugin lives in your repository under `plugins/claude/prompts.chat/`:
+
+```
+plugins/claude/prompts.chat/
+├── .claude-plugin/
+│   └── plugin.json          # Plugin manifest
+├── .mcp.json                # MCP server configuration
+├── commands/
+│   ├── prompts.md           # /prompts.chat:prompts command
+│   └── skills.md            # /prompts.chat:skills command
+├── agents/
+│   ├── prompt-manager.md    # Prompt management agent
+│   └── skill-manager.md     # Skill management agent
+└── skills/
+    ├── prompt-lookup/
+    │   └── SKILL.md         # Prompt discovery skill
+    └── skill-lookup/
+        └── SKILL.md         # Skill discovery skill
+```
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="MCP server" icon="plug" href="/integrations/mcp-server">
+    Connect prompts.chat to other AI tools via MCP
+  </Card>
+  <Card title="CLI" icon="terminal" href="/integrations/cli">
+    Browse and copy prompts directly from your terminal
+  </Card>
+</CardGroup>

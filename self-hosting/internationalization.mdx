@@ -1,0 +1,179 @@
+---
+title: "Internationalization"
+description: "Configure supported languages and the default locale for your instance."
+---
+
+prompts.chat ships with 17 built-in locales. The `i18n` block in `prompts.config.ts` controls which of these are active and which one is selected by default.
+
+## Configuration
+
+<Tabs>
+  <Tab title="prompts.config.ts">
+    ```typescript
+    import { defineConfig } from "@/lib/config";
+
+    export default defineConfig({
+      // ...
+      i18n: {
+        locales: ["en", "tr", "es", "zh", "ja", "ar", "pt", "fr", "it", "de", "nl", "ko", "ru", "he", "el", "az", "fa"],
+        defaultLocale: "en",
+      },
+    });
+    ```
+  </Tab>
+  <Tab title="Docker env vars">
+    ```bash
+    docker run -d \
+      --name prompts \
+      -p 4444:3000 \
+      -v prompts-data:/data \
+      -e PCHAT_LOCALES="en,es,fr,de" \
+      -e PCHAT_DEFAULT_LOCALE="en" \
+      ghcr.io/f/prompts.chat
+    ```
+  </Tab>
+</Tabs>
+
+## Options
+
+<ParamField path="i18n.locales" type="string[]" required>
+  Array of locale codes to enable. Each code must have a corresponding translation file at `messages/{locale}.json`.
+
+  To reduce bundle size and the language-switcher UI, only include the locales your users actually need.
+</ParamField>
+
+<ParamField path="i18n.defaultLocale" type="string" required>
+  The locale used when the user's browser preference cannot be matched to any enabled locale. Must be present in the `locales` array.
+</ParamField>
+
+## Supported locales
+
+All 17 locales below ship with complete translation files in the `messages/` directory.
+
+| Code | Language |
+|------|----------|
+| `en` | English |
+| `tr` | Turkish |
+| `es` | Spanish |
+| `zh` | Chinese (Simplified) |
+| `ja` | Japanese |
+| `ar` | Arabic |
+| `pt` | Portuguese |
+| `fr` | French |
+| `it` | Italian |
+| `de` | German |
+| `nl` | Dutch |
+| `ko` | Korean |
+| `ru` | Russian |
+| `he` | Hebrew |
+| `el` | Greek |
+| `az` | Azerbaijani |
+| `fa` | Persian (Farsi) |
+
+## Enabling a subset of locales
+
+If your instance serves a specific region, restrict `locales` to only the languages you support. This keeps the language-switcher clean and reduces the number of route prefixes generated.
+
+```typescript
+// English-only instance
+i18n: {
+  locales: ["en"],
+  defaultLocale: "en",
+}
+```
+
+```typescript
+// European languages only
+i18n: {
+  locales: ["en", "fr", "de", "es", "it", "nl"],
+  defaultLocale: "en",
+}
+```
+
+## Adding a new locale
+
+If you want to add a language that is not in the list above, follow these steps:
+
+<Steps>
+  <Step title="Create a translation file">
+    Copy the English base file and translate all values:
+
+    ```bash
+    cp messages/en.json messages/pl.json
+    ```
+
+    Then open `messages/pl.json` and translate each string value. Keys must remain unchanged.
+
+    ```json
+    {
+      "common": {
+        "loading": "Ładowanie...",
+        "error": "Wystąpił błąd",
+        "save": "Zapisz"
+      }
+    }
+    ```
+  </Step>
+  <Step title="Add the locale code to config">
+    ```typescript
+    i18n: {
+      locales: ["en", "pl"],
+      defaultLocale: "en",
+    }
+    ```
+  </Step>
+  <Step title="Rebuild the application">
+    ```bash
+    npm run build
+    npm run start
+    ```
+
+    The new locale will appear in the language switcher automatically.
+  </Step>
+</Steps>
+
+<Note>
+  Translation completeness is not validated at build time. Run `node scripts/check-translations.js` to identify any missing keys before deploying.
+</Note>
+
+## Translation files
+
+All translation files live in the `messages/` directory at the project root. Each file is a flat-ish JSON object keyed by namespace and then by translation key:
+
+```bash
+messages/
+├── en.json   # English (source of truth)
+├── tr.json
+├── es.json
+├── zh.json
+├── ja.json
+├── ar.json
+├── pt.json
+├── fr.json
+├── it.json
+├── de.json
+├── nl.json
+├── ko.json
+├── ru.json
+├── he.json
+├── el.json
+├── az.json
+└── fa.json
+```
+
+Translations are loaded at runtime by `next-intl`. The English file (`en.json`) is the canonical source of truth — if a key is missing from another locale file, `next-intl` will not automatically fall back to English; the key will render as-is.
+
+## Docker environment variable reference
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `PCHAT_LOCALES` | `i18n.locales` | Comma-separated list of locale codes | `en` |
+| `PCHAT_DEFAULT_LOCALE` | `i18n.defaultLocale` | Default locale code | `en` |
+
+```bash
+# Enable English, French, German, and Spanish with German as default
+docker run -d \
+  -e PCHAT_LOCALES="en,fr,de,es" \
+  -e PCHAT_DEFAULT_LOCALE="de" \
+  ghcr.io/f/prompts.chat
+```

@@ -1,0 +1,133 @@
+---
+title: "Authentication"
+description: "How to authenticate API requests to prompts.chat"
+---
+
+Most read endpoints on the prompts.chat API are public and require no authentication. Write operations — creating, updating, and deleting prompts — require an API key.
+
+## Getting an API key
+
+<Steps>
+  <Step title="Sign in">
+    Go to [prompts.chat](https://prompts.chat) and sign in to your account.
+  </Step>
+  <Step title="Open Settings">
+    Navigate to [prompts.chat/settings](https://prompts.chat/settings).
+  </Step>
+  <Step title="Generate your key">
+    Find the **API key** section and click **Generate**. Copy the key — it won't be shown again.
+  </Step>
+</Steps>
+
+<Warning>
+  Store your API key securely. Anyone with your key can create and modify prompts on your behalf. If a key is compromised, regenerate it from Settings immediately.
+</Warning>
+
+API keys have the format:
+
+```
+pchat_<64 hex characters>
+```
+
+## Using your API key
+
+Pass the key in the `Authorization` header as a Bearer token:
+
+```bash
+curl https://prompts.chat/api/prompts \
+  -H "Authorization: Bearer pchat_your_api_key_here"
+```
+
+Alternatively, pass it as a query parameter (less recommended — avoid in URLs that may be logged):
+
+```bash
+curl "https://prompts.chat/api/prompts?apiKey=pchat_your_api_key_here"
+```
+
+## Which endpoints require authentication
+
+| Method | Endpoint | Auth required |
+|--------|----------|---------------|
+| GET | `/api/prompts` | No |
+| GET | `/api/prompts/:id` | No (public prompts only) |
+| POST | `/api/prompts` | Yes |
+| PATCH | `/api/prompts/:id` | Yes (must be author or admin) |
+| DELETE | `/api/prompts/:id` | Yes (must be author or admin) |
+| GET | `/api/categories` | No |
+| GET | `/api/tags` | No |
+| GET | `/api/search` | No |
+| GET | `/api/user/profile` | Yes |
+| GET | `/api/health` | No |
+| GET | `/api/config/storage` | No |
+
+## Example authenticated request
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://prompts.chat/api/prompts \
+  -H "Authorization: Bearer pchat_your_api_key_here" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title": "Code reviewer",
+    "content": "Review the following code for bugs and style issues:",
+    "type": "TEXT",
+    "tagIds": [],
+    "isPrivate": false
+  }'
+```
+
+```typescript TypeScript
+const response = await fetch('https://prompts.chat/api/prompts', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer pchat_your_api_key_here',
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    title: 'Code reviewer',
+    content: 'Review the following code for bugs and style issues:',
+    type: 'TEXT',
+    tagIds: [],
+    isPrivate: false,
+  }),
+});
+
+const prompt = await response.json();
+```
+
+</CodeGroup>
+
+## Authentication errors
+
+If your key is missing or invalid, the API returns HTTP 401:
+
+```json
+{
+  "error": "unauthorized",
+  "message": "You must be logged in"
+}
+```
+
+If you are authenticated but not permitted to perform the action (for example, editing another user's prompt), the API returns HTTP 403:
+
+```json
+{
+  "error": "forbidden",
+  "message": "You can only edit your own prompts"
+}
+```
+
+## MCP server authentication
+
+When connecting prompts.chat as an MCP server, set the `PROMPTS_API_KEY` environment variable:
+
+```bash
+export PROMPTS_API_KEY=pchat_your_api_key_here
+```
+
+Or pass it as a header in your MCP client configuration. See [MCP protocol overview](/api/mcp-overview) for per-client examples.
+
+<Note>
+  Without `PROMPTS_API_KEY`, MCP tools that write data (`save_prompt`, `save_skill`, etc.) will return an authentication error. Read tools work without a key.
+</Note>

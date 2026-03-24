@@ -1,0 +1,106 @@
+---
+title: "Change requests"
+description: "Propose improvements to any public prompt and track the review process through to approval or rejection."
+---
+
+Change requests are the collaborative editing mechanism of prompts.chat. They work similarly to pull requests on GitHub: any user can propose a new version of a prompt, and the original author reviews and either approves or rejects it.
+
+## How change requests work
+
+<Steps>
+  <Step title="Open a prompt">
+    Navigate to any public prompt you want to improve.
+  </Step>
+  <Step title="Click Suggest changes">
+    Click the **Suggest changes** button on the prompt detail page. This opens the change request editor.
+  </Step>
+  <Step title="Edit the content and title">
+    The editor is pre-filled with the current prompt content. Modify the text directly. You can also propose a new title.
+  </Step>
+  <Step title="Preview the diff">
+    Switch to the **Preview** tab to see a side-by-side diff of your changes before submitting.
+  </Step>
+  <Step title="Describe your changes">
+    Fill in the optional **Reason** field to explain why you are proposing the change.
+  </Step>
+  <Step title="Submit">
+    Click **Submit**. The change request is created with status `PENDING` and the prompt author is notified.
+  </Step>
+</Steps>
+
+## Change request statuses
+
+<Tabs>
+  <Tab title="PENDING">
+    The default state after submission. The change request is waiting for the prompt author to review it. Both the submitter and the author can view the diff at `/prompts/<id>/changes/<change-id>`.
+  </Tab>
+  <Tab title="APPROVED">
+    The author accepted the proposed changes. The prompt content (and optionally title) is updated to match the proposal, and a new `PromptVersion` is created automatically.
+  </Tab>
+  <Tab title="REJECTED">
+    The author rejected the proposal. An optional `reviewNote` from the author explains the reason.
+  </Tab>
+</Tabs>
+
+## Reviewing a change request (for prompt authors)
+
+<Steps>
+  <Step title="Open the change request">
+    Navigate to your prompt's changes page. All pending change requests are listed there.
+  </Step>
+  <Step title="Review the diff">
+    The diff view highlights added lines in green and removed lines in red. For SKILL or STRUCTURED prompts a specialised diff viewer is used.
+  </Step>
+  <Step title="Approve or reject">
+    Click **Approve** to accept the changes, or **Reject** to decline. You can add a review note when rejecting to help the contributor understand why.
+  </Step>
+</Steps>
+
+<Note>
+  Only the prompt author can approve or reject change requests. Admins can dismiss change requests from any prompt.
+</Note>
+
+## Version history
+
+Every approved change request creates a new entry in the `PromptVersion` table:
+
+| Field | Description |
+|---|---|
+| `version` | Auto-incrementing integer starting at 1 |
+| `content` | The full prompt content at this version |
+| `changeNote` | The reason provided in the change request |
+| `createdBy` | ID of the user who authored the change |
+| `createdAt` | Timestamp of when the version was created |
+
+The initial version created when a prompt is first published always has `version: 1` and `changeNote: "Initial version"`.
+
+You can compare any two versions using the **Compare versions** button on the prompt detail page.
+
+## Reopening a rejected change request
+
+<Info>
+  If your change request was rejected, you can reopen it after making further edits. The **Reopen** button is available on the rejected change request detail page.
+</Info>
+
+## API reference
+
+```bash
+# Submit a change request
+curl -X POST https://prompts.chat/api/prompts/<promptId>/changes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "proposedContent": "You are an expert software engineer...",
+    "proposedTitle": "Senior software engineer",
+    "reason": "More specific role description improves output quality"
+  }'
+
+# Approve a change request
+curl -X PATCH https://prompts.chat/api/prompts/<promptId>/changes/<changeId> \
+  -H "Content-Type: application/json" \
+  -d '{"action": "approve"}'
+
+# Reject a change request
+curl -X PATCH https://prompts.chat/api/prompts/<promptId>/changes/<changeId> \
+  -H "Content-Type: application/json" \
+  -d '{"action": "reject", "reviewNote": "The original wording is intentional."}'
+```

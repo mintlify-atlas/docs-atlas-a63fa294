@@ -1,0 +1,220 @@
+---
+title: "Environment variables"
+description: "Complete reference for all environment variables used by prompts.chat."
+---
+
+Copy `.env.example` to `.env` and fill in the values before running the app.
+
+```bash
+cp .env.example .env
+```
+
+<Warning>
+  Never commit your `.env` file to version control. Add it to `.gitignore` and use a secrets management tool in production (e.g., AWS Secrets Manager, Doppler, Vault).
+</Warning>
+
+## Required variables
+
+These variables must be set for the application to start.
+
+<ParamField path="DATABASE_URL" type="string" required>
+  PostgreSQL connection string. Use the format below.
+
+  ```
+  postgresql://user:password@host:5432/dbname?schema=public
+  ```
+
+  For serverless or high-concurrency environments, append connection pool parameters:
+
+  ```
+  postgresql://user:password@host:5432/dbname?schema=public&connection_limit=5&pool_timeout=10
+  ```
+</ParamField>
+
+<ParamField path="AUTH_SECRET" type="string" required>
+  Secret key used by NextAuth.js to sign session tokens and cookies. Must be a long, random string.
+
+  Generate a secure value with:
+
+  ```bash
+  openssl rand -base64 32
+  ```
+
+  <Warning>Always set this explicitly in production. If left unset, sessions will be invalidated on every restart.</Warning>
+</ParamField>
+
+## OAuth providers
+
+At least one authentication provider must be configured in `prompts.config.ts`. Set the corresponding environment variables for each provider you enable.
+
+### GitHub
+
+<ParamField path="AUTH_GITHUB_ID" type="string">
+  GitHub OAuth application client ID. Create an OAuth app at
+  [github.com/settings/developers](https://github.com/settings/developers).
+
+  Set the callback URL to `https://your-domain.com/api/auth/callback/github`.
+</ParamField>
+
+<ParamField path="AUTH_GITHUB_SECRET" type="string">
+  GitHub OAuth application client secret.
+</ParamField>
+
+### Google
+
+<ParamField path="AUTH_GOOGLE_ID" type="string">
+  Google OAuth 2.0 client ID. Create credentials in the
+  [Google Cloud Console](https://console.cloud.google.com/).
+
+  Set the authorised redirect URI to `https://your-domain.com/api/auth/callback/google`.
+</ParamField>
+
+<ParamField path="AUTH_GOOGLE_SECRET" type="string">
+  Google OAuth 2.0 client secret.
+</ParamField>
+
+### Microsoft Entra ID (Azure AD)
+
+<ParamField path="AUTH_AZURE_AD_CLIENT_ID" type="string">
+  Azure AD application (client) ID.
+</ParamField>
+
+<ParamField path="AUTH_AZURE_AD_CLIENT_SECRET" type="string">
+  Azure AD client secret value.
+</ParamField>
+
+<ParamField path="AUTH_AZURE_AD_ISSUER" type="string">
+  Azure AD issuer URL. Use the tenant-specific endpoint:
+
+  ```
+  https://login.microsoftonline.com/<tenant-id>/v2.0
+  ```
+</ParamField>
+
+## AI features
+
+Required when `aiSearch` or `aiGeneration` features are enabled in `prompts.config.ts`.
+
+<ParamField path="OPENAI_API_KEY" type="string">
+  OpenAI API key used for semantic search embeddings and AI-powered prompt generation.
+
+  ```bash
+  OPENAI_API_KEY=sk-...
+  ```
+</ParamField>
+
+<ParamField path="OPENAI_BASE_URL" type="string" default="https://api.openai.com/v1">
+  Base URL for the OpenAI API. Override this to use an OpenAI-compatible endpoint
+  (e.g., Azure OpenAI, Ollama, LiteLLM).
+</ParamField>
+
+<ParamField path="OPENAI_EMBEDDING_MODEL" type="string" default="text-embedding-3-small">
+  Model used to generate vector embeddings for AI search.
+</ParamField>
+
+<ParamField path="OPENAI_GENERATIVE_MODEL" type="string" default="gpt-4o-mini">
+  Model used for AI prompt generation.
+</ParamField>
+
+<ParamField path="OPENAI_TRANSLATION_MODEL" type="string" default="gpt-4o-mini">
+  Model used to translate non-English search queries before embedding.
+</ParamField>
+
+## Database connection
+
+<ParamField path="DIRECT_URL" type="string">
+  A direct PostgreSQL connection string that bypasses any connection pooler (e.g., PgBouncer, Supabase pooler, Neon pooled endpoint). Prisma uses this URL exclusively for migrations.
+
+  Required when `DATABASE_URL` points to a pooled connection. Without it, `prisma migrate deploy` may hang or fail.
+
+  ```bash
+  DIRECT_URL="postgresql://user:password@host:5432/dbname?schema=public"
+  ```
+
+  See [Database — connection pooling](/self-hosting/database#connection-pooling) for details.
+</ParamField>
+
+## Operations
+
+<ParamField path="CRON_SECRET" type="string">
+  Secret used to authenticate cron job requests (e.g., the daily generation credit reset endpoint). Set to a random string.
+
+  ```bash
+  openssl rand -hex 32
+  ```
+</ParamField>
+
+<ParamField path="LOG_LEVEL" type="string" default="info">
+  Controls the verbosity of application logs via [Pino](https://getpino.io/). Accepted values: `trace`, `debug`, `info`, `warn`, `error`, `fatal`.
+</ParamField>
+
+## Storage providers
+
+Required when file upload features are enabled. Set `ENABLED_STORAGE` to choose the active provider.
+
+<ParamField path="ENABLED_STORAGE" type="string">
+  Active storage backend. Accepted values: `s3`, `do-spaces`, `url`.
+</ParamField>
+
+### AWS S3
+
+<ParamField path="S3_BUCKET" type="string">S3 bucket name.</ParamField>
+<ParamField path="S3_REGION" type="string">AWS region (e.g., `us-east-1`).</ParamField>
+<ParamField path="S3_ACCESS_KEY_ID" type="string">AWS access key ID.</ParamField>
+<ParamField path="S3_SECRET_ACCESS_KEY" type="string">AWS secret access key.</ParamField>
+<ParamField path="S3_ENDPOINT" type="string">Custom endpoint for S3-compatible services such as MinIO.</ParamField>
+
+### DigitalOcean Spaces
+
+<ParamField path="DO_SPACES_BUCKET" type="string">Spaces bucket name.</ParamField>
+<ParamField path="DO_SPACES_REGION" type="string">Spaces region (e.g., `nyc3`, `fra1`).</ParamField>
+<ParamField path="DO_SPACES_ACCESS_KEY_ID" type="string">Spaces access key ID.</ParamField>
+<ParamField path="DO_SPACES_SECRET_ACCESS_KEY" type="string">Spaces secret access key.</ParamField>
+<ParamField path="DO_SPACES_CDN_ENDPOINT" type="string">Optional CDN endpoint URL for Spaces with CDN enabled.</ParamField>
+
+## Analytics & ads
+
+<ParamField path="GOOGLE_ANALYTICS_ID" type="string">
+  Google Analytics 4 measurement ID (e.g., `G-XXXXXXXXX`).
+</ParamField>
+
+<ParamField path="GOOGLE_ADSENSE_ACCOUNT" type="string">
+  Google AdSense publisher account ID (e.g., `ca-pub-0000000000000000`).
+</ParamField>
+
+## Full .env.example template
+
+```bash .env.example
+# Database
+# Add connection_limit and pool_timeout for serverless/production environments:
+# Example: ?schema=public&connection_limit=5&pool_timeout=10
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/prompts_chat?schema=public"
+# Direct URL for migrations (bypasses connection pooler) - used by Neon, Supabase, PlanetScale
+# DIRECT_URL="postgresql://postgres:postgres@localhost:5432/prompts_chat?schema=public"
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-super-secret-key-change-in-production"
+
+# OAuth Providers (optional - enable in prompts.config.ts)
+# GOOGLE_CLIENT_ID=""
+# GOOGLE_CLIENT_SECRET=""
+# AZURE_AD_CLIENT_ID=""
+# AZURE_AD_CLIENT_SECRET=""
+# AZURE_AD_TENANT_ID=""
+# GITHUB_CLIENT_ID=your_client_id
+# GITHUB_CLIENT_SECRET=your_client_secret
+
+# AI Features (optional - enable aiSearch/aiGeneration in prompts.config.ts)
+# OPENAI_API_KEY=your_openai_api_key
+# OPENAI_BASE_URL=https://api.openai.com/v1
+# OPENAI_EMBEDDING_MODEL=text-embedding-3-small
+# OPENAI_GENERATIVE_MODEL=gpt-4o-mini
+# OPENAI_TRANSLATION_MODEL=gpt-4o-mini
+
+# Cron Job Secret (for daily credit reset)
+CRON_SECRET="your-secret-key-here"
+
+# Logging (optional)
+# LOG_LEVEL="info"  # Options: trace, debug, info, warn, error, fatal
+```

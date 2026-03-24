@@ -1,0 +1,117 @@
+---
+title: "Quickstart"
+description: "Deploy prompts.chat in under 10 minutes using the interactive setup wizard."
+---
+
+## Fast path
+
+Run the following command to scaffold a new prompts.chat instance:
+
+```bash
+npx prompts.chat new my-prompt-library
+cd my-prompt-library
+```
+
+This command:
+1. Creates a new directory named `my-prompt-library`
+2. Clones a clean copy of the repository (without development files)
+3. Installs all dependencies
+4. Launches the interactive setup wizard automatically
+
+## What the wizard configures
+
+The setup wizard (`npm run setup`) walks you through every aspect of your instance:
+
+- **Branding** — app name, logo path, and description
+- **Theme** — primary color (hex), border radius (`none` / `sm` / `md` / `lg`), and UI variant (`default` / `flat` / `brutal`)
+- **Authentication** — choose from GitHub, Google, Microsoft Entra ID, or email/password credentials; mix and match providers
+- **Languages** — select from 16 supported locales (e.g., `en`, `es`, `ja`, `tr`, `zh`)
+- **Features** — toggle private prompts, change requests, categories, tags, comments, AI search, AI generation, and MCP support
+
+When the wizard completes it writes a `prompts.config.ts` file with your choices. You can edit this file at any time to adjust the configuration.
+
+## Configure environment variables
+
+<Steps>
+  <Step title="Copy the example environment file">
+    ```bash
+    cp .env.example .env
+    ```
+  </Step>
+
+  <Step title="Set the required variables">
+    Open `.env` and set at minimum:
+
+    ```bash
+    # Database connection
+    DATABASE_URL="postgresql://user:password@localhost:5432/prompts_chat?schema=public"
+
+    # Authentication secret (generate a random value)
+    AUTH_SECRET="your-super-secret-key-change-in-production"
+    ```
+
+    <Warning>
+      Never use the default `AUTH_SECRET` value from `.env.example` in production. Generate a strong random secret:
+
+      ```bash
+      openssl rand -base64 32
+      ```
+    </Warning>
+  </Step>
+
+  <Step title="Add OAuth credentials (if using OAuth providers)">
+    If you chose GitHub or Google authentication in the wizard, add the corresponding credentials:
+
+    <CodeGroup>
+
+    ```bash GitHub OAuth
+    AUTH_GITHUB_ID="your-github-client-id"
+    AUTH_GITHUB_SECRET="your-github-client-secret"
+    ```
+
+    ```bash Google OAuth
+    AUTH_GOOGLE_ID="your-google-client-id"
+    AUTH_GOOGLE_SECRET="your-google-client-secret"
+    ```
+
+    </CodeGroup>
+  </Step>
+
+  <Step title="Add AI features (optional)">
+    If you enabled AI search or AI generation in the wizard, add your OpenAI API key:
+
+    ```bash
+    OPENAI_API_KEY="sk-..."
+    ```
+  </Step>
+</Steps>
+
+## Start the development server
+
+Once the environment file is configured, run database migrations and start the app:
+
+```bash
+npm run db:migrate
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+<Tip>
+  Run `npm run db:seed` after migrations to populate your instance with a starter set of community prompts.
+</Tip>
+
+## Build for production
+
+When you are ready to deploy:
+
+```bash
+npm run build
+npm run start
+```
+
+The build step runs `prisma generate` automatically before compiling the Next.js app.
+
+## Manual path
+
+If you prefer to clone the repository yourself and skip the `npx` scaffolding, see [Manual setup](/self-hosting/manual-setup) for step-by-step instructions.

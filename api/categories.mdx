@@ -1,0 +1,92 @@
+---
+title: "Categories API"
+description: "Browse and filter by prompt categories"
+---
+
+Categories organise prompts into topics. They support a parent/child hierarchy — a category can have a `parentId` pointing to another category.
+
+## Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/categories` | No | List all categories |
+
+<Note>
+  Category management (create, update, delete) is available to admins only via `/api/admin/categories`.
+</Note>
+
+---
+
+## GET /api/categories
+
+Return all categories. No authentication required.
+
+### Response
+
+An array of category objects.
+
+<ResponseField name="id" type="string">Unique category ID.</ResponseField>
+<ResponseField name="name" type="string">Display name.</ResponseField>
+<ResponseField name="slug" type="string">URL-friendly identifier (unique).</ResponseField>
+<ResponseField name="description" type="string">Optional description.</ResponseField>
+<ResponseField name="icon" type="string">Optional icon name or emoji.</ResponseField>
+<ResponseField name="order" type="number">Sort order. Lower numbers appear first.</ResponseField>
+<ResponseField name="pinned" type="boolean">Whether the category is pinned to the top of the list.</ResponseField>
+<ResponseField name="parentId" type="string">ID of the parent category, or `null` for top-level categories.</ResponseField>
+<ResponseField name="parent" type="object">Parent category object (nested), or `null`.</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash curl
+curl https://prompts.chat/api/categories
+```
+
+```typescript TypeScript
+const res = await fetch('https://prompts.chat/api/categories');
+const categories = await res.json();
+```
+
+</CodeGroup>
+
+```json Response
+[
+  {
+    "id": "cm1cat001",
+    "name": "Coding",
+    "slug": "coding",
+    "description": "Prompts for software development",
+    "icon": "code",
+    "order": 1,
+    "pinned": true,
+    "parentId": null,
+    "parent": null
+  },
+  {
+    "id": "cm1cat002",
+    "name": "Python",
+    "slug": "python",
+    "description": "Python-specific prompts",
+    "icon": null,
+    "order": 0,
+    "pinned": false,
+    "parentId": "cm1cat001",
+    "parent": {
+      "id": "cm1cat001",
+      "name": "Coding",
+      "slug": "coding"
+    }
+  }
+]
+```
+
+## Filtering prompts by category
+
+Pass a category ID to the prompts list endpoint:
+
+```bash
+curl "https://prompts.chat/api/prompts?category=cm1cat001"
+```
+
+See [Prompts API](/api/prompts) for the full list of available filters.

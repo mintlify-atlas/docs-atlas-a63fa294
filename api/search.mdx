@@ -1,0 +1,130 @@
+---
+title: "Search API"
+description: "Full-text and AI-powered semantic search across prompts"
+---
+
+prompts.chat provides two search modes:
+
+- **Keyword search** — always available. Matches against prompt title, content, and description using case-insensitive string matching.
+- **Semantic (AI) search** — available when `OPENAI_API_KEY` is configured. Uses vector embeddings for meaning-based results.
+
+## Endpoints
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/api/prompts/search` | No | Fast keyword search (typeahead) |
+| GET | `/api/prompts` | No | Keyword search via `q` param with full pagination |
+| GET | `/api/search/ai` | No | Semantic (AI) search |
+
+---
+
+## GET /api/prompts/search
+
+Fast title-match search, optimised for typeahead/autocomplete use cases. Returns minimal prompt data.
+
+### Query parameters
+
+<ParamField query="q" type="string" required>
+  Search query. Must be at least 2 characters. Supports comma-separated keywords to match any term.
+</ParamField>
+
+<ParamField query="limit" type="number" default="10">
+  Maximum number of results. Capped at 50.
+</ParamField>
+
+<ParamField query="ownerOnly" type="boolean" default="false">
+  When `true` and the user is authenticated, only return prompts owned by the current user.
+</ParamField>
+
+### Response
+
+```json
+{
+  "prompts": [
+    {
+      "id": "cm1abc123",
+      "title": "Senior code reviewer",
+      "slug": "senior-code-reviewer",
+      "author": { "username": "janesmith" }
+    }
+  ]
+}
+```
+
+### Example
+
+```bash
+curl "https://prompts.chat/api/prompts/search?q=code+review&limit=5"
+```
+
+---
+
+## GET /api/prompts (with `q` param)
+
+Full-featured keyword search with pagination, type filtering, and sorting. The `q` parameter on the main prompts list endpoint performs a case-insensitive match against title, content, and description.
+
+### Example
+
+```bash
+curl "https://prompts.chat/api/prompts?q=code+review&type=TEXT&sort=upvotes&page=1&perPage=20"
+```
+
+See [Prompts API](/api/prompts) for all available query parameters and the full response schema.
+
+---
+
+## GET /api/search/ai
+
+Semantic search using OpenAI vector embeddings. Returns prompts ranked by meaning similarity to the query.
+
+<Note>
+  This endpoint is only available on instances where `OPENAI_API_KEY` is configured. If AI search is disabled, the endpoint returns HTTP 400 with `{ "error": "AI Search is not enabled" }`.
+</Note>
+
+### Query parameters
+
+<ParamField query="q" type="string" required>
+  The search query. Must be a non-empty string.
+</ParamField>
+
+<ParamField query="limit" type="number" default="20">
+  Maximum number of results to return.
+</ParamField>
+
+### Response
+
+<ResponseField name="results" type="object[]">Array of matching prompt objects, ordered by semantic similarity.</ResponseField>
+<ResponseField name="query" type="string">The query string that was searched.</ResponseField>
+<ResponseField name="count" type="number">Number of results returned.</ResponseField>
+
+### Example
+
+<CodeGroup>
+
+```bash curl
+curl "https://prompts.chat/api/search/ai?q=help+me+write+better+code&limit=10"
+```
+
+```json Response
+{
+  "results": [
+    {
+      "id": "cm1abc123",
+      "title": "Senior code reviewer",
+      "slug": "senior-code-reviewer"
+    }
+  ],
+  "query": "help me write better code",
+  "count": 1
+}
+```
+
+</CodeGroup>
+
+### Error responses
+
+| Status | Description |
+|--------|-------------|
+| 400 | AI search is not enabled on this instance |
+| 400 | Query parameter `q` is missing or empty |
+| 500 | Search failed (internal error) |

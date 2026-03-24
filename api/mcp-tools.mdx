@@ -1,0 +1,313 @@
+---
+title: "MCP tools reference"
+description: "Complete reference for all MCP tools available through the prompts.chat MCP server"
+---
+
+The prompts.chat MCP server exposes 10 tools across two categories. Read tools work without authentication. Write tools (`save_prompt`, `save_skill`, `add_file_to_skill`, `update_skill_file`, `remove_file_from_skill`) require `PROMPTS_API_KEY` to be set.
+
+See [MCP protocol overview](/api/mcp-overview) for connection setup.
+
+<Tabs>
+  <Tab title="Prompt tools">
+
+## search_prompts
+
+Search prompts by keyword, category, tag, or type.
+
+### Parameters
+
+<ParamField body="query" type="string" required>
+  Search query string.
+</ParamField>
+
+<ParamField body="type" type="string">
+  Filter by prompt type: `TEXT`, `IMAGE`, `VIDEO`, `AUDIO`, `SKILL`, or `TASTE`.
+</ParamField>
+
+<ParamField body="category" type="string">
+  Filter by category name or slug.
+</ParamField>
+
+<ParamField body="tag" type="string">
+  Filter by tag slug.
+</ParamField>
+
+### Example response
+
+```json
+[
+  {
+    "id": "cm1abc123",
+    "title": "Senior code reviewer",
+    "slug": "senior-code-reviewer",
+    "description": "Reviews code for security and maintainability",
+    "type": "TEXT",
+    "author": { "username": "janesmith" }
+  }
+]
+```
+
+---
+
+## get_prompt
+
+Retrieve a prompt by its ID or slug, with optional variable substitution.
+
+### Parameters
+
+<ParamField body="id" type="string">
+  Prompt ID. Provide either `id` or `slug`.
+</ParamField>
+
+<ParamField body="slug" type="string">
+  Prompt slug. Provide either `id` or `slug`.
+</ParamField>
+
+<ParamField body="variables" type="object">
+  Key/value map for variable substitution. If the prompt content contains `{{variable_name}}` placeholders, they are replaced with the provided values.
+</ParamField>
+
+### Example response
+
+```json
+{
+  "id": "cm1abc123",
+  "title": "Senior code reviewer",
+  "slug": "senior-code-reviewer",
+  "content": "Act as a senior software engineer...",
+  "type": "TEXT",
+  "author": { "username": "janesmith", "verified": false },
+  "tags": [],
+  "voteCount": 42
+}
+```
+
+---
+
+## save_prompt
+
+Save a new prompt to your prompts.chat account. Requires `PROMPTS_API_KEY`.
+
+### Parameters
+
+<ParamField body="title" type="string" required>
+  Prompt title (1–200 characters).
+</ParamField>
+
+<ParamField body="content" type="string" required>
+  The full prompt text.
+</ParamField>
+
+<ParamField body="type" type="string" required>
+  Output type: `TEXT`, `IMAGE`, `VIDEO`, `AUDIO`, `SKILL`, or `TASTE`.
+</ParamField>
+
+<ParamField body="description" type="string">
+  Short description (up to 500 characters).
+</ParamField>
+
+<ParamField body="categoryId" type="string">
+  ID of the category to assign.
+</ParamField>
+
+<ParamField body="tagIds" type="string[]">
+  Array of tag IDs to attach.
+</ParamField>
+
+<ParamField body="isPrivate" type="boolean" default="false">
+  Set to `true` to keep the prompt private.
+</ParamField>
+
+### Example response
+
+```json
+{
+  "id": "cm1newprompt",
+  "title": "My new prompt",
+  "slug": "my-new-prompt",
+  "createdAt": "2026-03-24T12:00:00.000Z"
+}
+```
+
+---
+
+## improve_prompt
+
+Enhance a prompt using AI. Returns an improved version of the prompt text.
+
+### Parameters
+
+<ParamField body="prompt" type="string" required>
+  The prompt text to improve.
+</ParamField>
+
+<ParamField body="instructions" type="string">
+  Optional instructions for how to improve the prompt, e.g. "make it more concise" or "add chain-of-thought steps".
+</ParamField>
+
+### Example response
+
+```json
+{
+  "improved": "Act as a senior software engineer with 10+ years of experience. Review the following code with a focus on: 1) Security vulnerabilities 2) Performance bottlenecks 3) Adherence to SOLID principles. For each issue found, explain the problem and provide a concrete fix."
+}
+```
+
+  </Tab>
+  <Tab title="Skill tools">
+
+## search_skills
+
+Search for Agent Skills — multi-file skill packages for AI assistants.
+
+### Parameters
+
+<ParamField body="query" type="string" required>
+  Search query string.
+</ParamField>
+
+<ParamField body="category" type="string">
+  Filter by category name or slug.
+</ParamField>
+
+<ParamField body="tag" type="string">
+  Filter by tag slug.
+</ParamField>
+
+### Example response
+
+```json
+[
+  {
+    "id": "cm1skill001",
+    "title": "Testing automation skill",
+    "slug": "testing-automation",
+    "description": "Writes and runs unit tests",
+    "type": "SKILL"
+  }
+]
+```
+
+---
+
+## get_skill
+
+Retrieve a skill with all of its files.
+
+### Parameters
+
+<ParamField body="id" type="string">
+  Skill ID. Provide either `id` or `slug`.
+</ParamField>
+
+<ParamField body="slug" type="string">
+  Skill slug. Provide either `id` or `slug`.
+</ParamField>
+
+### Example response
+
+```json
+{
+  "id": "cm1skill001",
+  "title": "Testing automation skill",
+  "slug": "testing-automation",
+  "files": [
+    { "filename": "SKILL.md", "content": "# Testing automation\n..." },
+    { "filename": "examples/test.py", "content": "import pytest\n..." }
+  ]
+}
+```
+
+---
+
+## save_skill
+
+Create a new multi-file skill. Requires `PROMPTS_API_KEY`.
+
+### Parameters
+
+<ParamField body="name" type="string" required>
+  Skill name.
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  Short description of what the skill does.
+</ParamField>
+
+<ParamField body="files" type="object[]" required>
+  Array of file objects. Each file requires:
+  - `filename` (string) — relative path and filename
+  - `content` (string) — file content
+</ParamField>
+
+### Example
+
+```json
+{
+  "name": "API documentation skill",
+  "description": "Generates API documentation from source code",
+  "files": [
+    { "filename": "SKILL.md", "content": "# API docs skill\n..." },
+    { "filename": "templates/endpoint.md", "content": "## {{method}} {{path}}\n" }
+  ]
+}
+```
+
+---
+
+## add_file_to_skill
+
+Add a new file to an existing skill. Requires `PROMPTS_API_KEY`.
+
+### Parameters
+
+<ParamField body="skillId" type="string" required>
+  The ID of the skill to add the file to.
+</ParamField>
+
+<ParamField body="filename" type="string" required>
+  Filename (including relative path if in a subdirectory).
+</ParamField>
+
+<ParamField body="content" type="string" required>
+  File content.
+</ParamField>
+
+---
+
+## update_skill_file
+
+Update the content of an existing file in a skill. Requires `PROMPTS_API_KEY`.
+
+### Parameters
+
+<ParamField body="skillId" type="string" required>
+  The ID of the skill.
+</ParamField>
+
+<ParamField body="filename" type="string" required>
+  Filename of the file to update.
+</ParamField>
+
+<ParamField body="content" type="string" required>
+  New file content.
+</ParamField>
+
+---
+
+## remove_file_from_skill
+
+Remove a file from a skill. Requires `PROMPTS_API_KEY`.
+
+### Parameters
+
+<ParamField body="skillId" type="string" required>
+  The ID of the skill.
+</ParamField>
+
+<ParamField body="filename" type="string" required>
+  Filename of the file to remove.
+</ParamField>
+
+  </Tab>
+</Tabs>

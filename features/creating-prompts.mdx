@@ -1,0 +1,152 @@
+---
+title: "Creating prompts"
+description: "Publish a new prompt to the library, understand validation rules, rate limits, and automatic quality checks."
+---
+
+Anyone with an account can publish a prompt at [prompts.chat/prompts/new](https://prompts.chat/prompts/new).
+
+## Steps to create a prompt
+
+<Steps>
+  <Step title="Open the new prompt form">
+    Navigate to [prompts.chat/prompts/new](https://prompts.chat/prompts/new) or click the **+ Create** button on the prompts page.
+  </Step>
+  <Step title="Fill in the required fields">
+    A prompt requires at minimum a **title** and **content**. All other fields are optional.
+  </Step>
+  <Step title="Choose a prompt type">
+    Select the output type (TEXT, IMAGE, VIDEO, AUDIO) or a special input type (STRUCTURED, SKILL, TASTE) from the type selector. See [Prompt types](/features/prompt-types) for a full description of each.
+  </Step>
+  <Step title="Add metadata">
+    Optionally add a description, category, tags, contributors, and model compatibility hints.
+  </Step>
+  <Step title="Publish or save privately">
+    Toggle **Private** to keep the prompt visible only to you, then click **Create prompt**.
+  </Step>
+</Steps>
+
+## Field reference
+
+### Required fields
+
+<ParamField body="title" type="string" required>
+  The prompt title. Minimum 1 character, maximum 200 characters. Used for slug generation and duplicate detection.
+</ParamField>
+
+<ParamField body="content" type="string" required>
+  The prompt body. Minimum 1 character. Supports template variables using `{{variable_name}}` syntax.
+</ParamField>
+
+### Optional fields
+
+<ParamField body="description" type="string">
+  A short summary shown on the prompt card and in search results. Maximum 500 characters.
+</ParamField>
+
+<ParamField body="categoryId" type="string">
+  The ID of the category to assign the prompt to. Categories are hierarchical; you can assign a prompt to a parent or child category.
+</ParamField>
+
+<ParamField body="tagIds" type="string[]">
+  An array of tag IDs. Tags appear as coloured chips on the prompt card and are filterable.
+</ParamField>
+
+<ParamField body="type" type="enum">
+  Output type: `TEXT` | `IMAGE` | `VIDEO` | `AUDIO` | `SKILL` | `TASTE`. Defaults to `TEXT`.
+</ParamField>
+
+<ParamField body="structuredFormat" type="enum">
+  Set to `JSON` or `YAML` to mark the prompt body as a structured document. Renders with syntax highlighting.
+</ParamField>
+
+<ParamField body="isPrivate" type="boolean">
+  When `true`, the prompt is only visible to its author. Defaults to `false`.
+</ParamField>
+
+<ParamField body="mediaUrl" type="string">
+  A URL to a sample image, video, or audio file associated with the prompt. Must be a valid URL.
+</ParamField>
+
+<ParamField body="requiresMediaUpload" type="boolean">
+  Signals that running this prompt requires the user to attach media. When `true`, you can also set `requiredMediaType` (`IMAGE` | `VIDEO` | `DOCUMENT`) and `requiredMediaCount` (1–10).
+</ParamField>
+
+<ParamField body="bestWithModels" type="string[]">
+  Up to 3 model slugs that this prompt works best with, for example `["gpt-4o", "claude-3-5-sonnet"]`. Shown as compatibility hints on the prompt detail page.
+</ParamField>
+
+<ParamField body="bestWithMCP" type="object[]">
+  An array of MCP server configs that enhance this prompt. Each item has a `command` string and an optional `tools` string array.
+
+  ```json
+  [
+    {
+      "command": "npx -y @modelcontextprotocol/server-filesystem /path",
+      "tools": ["read_file", "write_file"]
+    }
+  ]
+  ```
+</ParamField>
+
+<ParamField body="workflowLink" type="string">
+  A URL to a live demo or test environment for flow prompts (prompts that are part of a multi-step chain).
+</ParamField>
+
+## Template variables
+
+You can embed named placeholders in the prompt body using double-brace syntax:
+
+```
+You are a {{role}} specialising in {{domain}}.
+Respond in {{language}}.
+```
+
+When a user copies or runs a prompt that contains variables, a modal opens and prompts them to fill in each value before the finalised text is copied to their clipboard or sent to a model.
+
+<Tip>
+  Use descriptive variable names. `{{target_audience}}` is clearer than `{{x}}`.
+</Tip>
+
+## Rate limits
+
+<Warning>
+  You must wait **30 seconds** between creating prompts. Flagged accounts are additionally limited to **5 prompts per day**. Exceeding either limit returns HTTP `429`.
+</Warning>
+
+| Limit | Applies to |
+|---|---|
+| 30-second cooldown | All users |
+| 5 prompts per day | Flagged accounts only |
+
+## Duplicate detection
+
+Before a prompt is saved the API runs two duplicate checks:
+
+1. **Exact match** — if you already own a prompt with the same title (case-insensitive) or the exact same content, the request is rejected with `409 duplicate_prompt`.
+2. **Similarity check** — the new content is compared against the last 1,000 public prompts. If a similar prompt is found (using normalised string similarity), the request is rejected with `409 content_exists` and a reference to the existing prompt.
+
+## Automatic quality checks
+
+After a public prompt is saved, an asynchronous quality check runs in the background. If the prompt fails the check it is automatically **delisted** (hidden from the public feed) and a `delistReason` is set.
+
+| Reason | Meaning |
+|---|---|
+| `TOO_SHORT` | The prompt content is too short to be useful |
+| `LOW_QUALITY` | The content does not meet quality standards |
+| `NOT_LLM_INSTRUCTION` | The content is not a valid instruction for a language model |
+| `NOT_ENGLISH` | The content is not in English |
+| `UNUSUAL_ACTIVITY` | The author account is flagged |
+| `MANUAL` | Delisted manually by an admin |
+
+<Note>
+  Delisted prompts are not deleted. You can request a relist via the report system (`reason: RELIST_REQUEST`).
+</Note>
+
+## What happens after creation
+
+Once a prompt is created:
+
+- An initial `PromptVersion` (`version: 1`) is created automatically.
+- If `OPENAI_API_KEY` is configured, an embedding is generated for AI semantic search.
+- Related prompts are found and linked.
+- Webhooks subscribed to `PROMPT_CREATED` are fired (for public prompts only).

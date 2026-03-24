@@ -1,0 +1,255 @@
+---
+title: "Authentication"
+description: "Configure authentication providers so users can sign in to your instance."
+---
+
+prompts.chat supports five built-in authentication providers. You can enable any combination of them via the `auth.providers` array in `prompts.config.ts`.
+
+## Available providers
+
+<CardGroup cols={2}>
+  <Card title="Credentials" icon="envelope">
+    Email and password login. Users register and sign in with a local account stored in your database.
+  </Card>
+  <Card title="GitHub" icon="github">
+    OAuth via GitHub. Users sign in with their GitHub account.
+  </Card>
+  <Card title="Google" icon="google">
+    OAuth via Google. Users sign in with their Google account.
+  </Card>
+  <Card title="Azure AD" icon="microsoft">
+    OAuth via Microsoft Entra ID (formerly Azure Active Directory). Ideal for enterprise and Microsoft 365 tenants.
+  </Card>
+  <Card title="Apple" icon="apple">
+    OAuth via Sign in with Apple. Requires an Apple Developer account.
+  </Card>
+</CardGroup>
+
+## `auth` configuration
+
+<ParamField path="auth.providers" type="string[]" required>
+  Array of provider IDs to enable. Accepted values: `"credentials"`, `"github"`, `"google"`, `"azure"`, `"apple"`.
+
+  Multiple providers can be active simultaneously:
+
+  ```typescript
+  auth: {
+    providers: ["github", "google", "credentials"],
+  }
+  ```
+</ParamField>
+
+<ParamField path="auth.allowRegistration" type="boolean" required>
+  When `true`, visitors can create new accounts through the `credentials` provider. Has no effect on OAuth providers — those always allow new accounts on first sign-in.
+
+  Set to `false` to restrict your instance to invited/existing users only.
+</ParamField>
+
+## Required environment variable
+
+<Warning>
+  `AUTH_SECRET` must be set in every deployment. It is used to sign session tokens and cookies. Without it, authentication will not function correctly.
+
+  ```bash
+  # Generate a secure random secret
+  openssl rand -base64 32
+  ```
+</Warning>
+
+## Provider setup
+
+<Tabs>
+  <Tab title="Credentials">
+    Email/password authentication stores credentials in your PostgreSQL database. No external OAuth app is required.
+
+    **Environment variables:**
+
+    ```bash
+    AUTH_SECRET="your-random-secret"
+    ```
+
+    **Config:**
+
+    ```typescript
+    auth: {
+      providers: ["credentials"],
+      allowRegistration: true,
+    }
+    ```
+
+    <Note>
+      Set `allowRegistration: false` if you want to prevent new sign-ups and manage users manually via the admin panel.
+    </Note>
+  </Tab>
+
+  <Tab title="GitHub">
+    <Steps>
+      <Step title="Create a GitHub OAuth App">
+        1. Go to **GitHub → Settings → Developer settings → OAuth Apps → New OAuth App**
+        2. Set the **Authorization callback URL** to:
+           ```
+           https://your-domain.com/api/auth/callback/github
+           ```
+        3. Copy the **Client ID** and generate a **Client Secret**
+      </Step>
+      <Step title="Set environment variables">
+        ```bash
+        AUTH_SECRET="your-random-secret"
+        AUTH_GITHUB_ID="your-github-client-id"
+        AUTH_GITHUB_SECRET="your-github-client-secret"
+        ```
+      </Step>
+      <Step title="Enable in config">
+        ```typescript
+        auth: {
+          providers: ["github"],
+          allowRegistration: false,
+        }
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Google">
+    <Steps>
+      <Step title="Create a Google OAuth client">
+        1. Open the [Google Cloud Console](https://console.cloud.google.com/)
+        2. Create or select a project, then go to **APIs & Services → Credentials**
+        3. Click **Create Credentials → OAuth client ID**, choose **Web application**
+        4. Add your domain to **Authorized JavaScript origins** and set the **Authorized redirect URI** to:
+           ```
+           https://your-domain.com/api/auth/callback/google
+           ```
+        5. Copy the **Client ID** and **Client Secret**
+      </Step>
+      <Step title="Set environment variables">
+        ```bash
+        AUTH_SECRET="your-random-secret"
+        AUTH_GOOGLE_ID="your-google-client-id"
+        AUTH_GOOGLE_SECRET="your-google-client-secret"
+        ```
+      </Step>
+      <Step title="Enable in config">
+        ```typescript
+        auth: {
+          providers: ["google"],
+          allowRegistration: false,
+        }
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Azure AD">
+    <Steps>
+      <Step title="Register an app in Microsoft Entra ID">
+        1. Go to the [Azure Portal](https://portal.azure.com/) → **Microsoft Entra ID → App registrations → New registration**
+        2. Set the **Redirect URI** (Web) to:
+           ```
+           https://your-domain.com/api/auth/callback/azure-ad
+           ```
+        3. After registration, note the **Application (client) ID** and **Directory (tenant) ID**
+        4. Go to **Certificates & secrets → New client secret** and copy the value
+      </Step>
+      <Step title="Set environment variables">
+        ```bash
+        AUTH_SECRET="your-random-secret"
+        AUTH_AZURE_AD_CLIENT_ID="your-azure-client-id"
+        AUTH_AZURE_AD_CLIENT_SECRET="your-azure-client-secret"
+        AUTH_AZURE_AD_ISSUER="https://login.microsoftonline.com/your-tenant-id/v2.0"
+        ```
+
+        Replace `your-tenant-id` with the **Directory (tenant) ID** from step 1.
+      </Step>
+      <Step title="Enable in config">
+        ```typescript
+        auth: {
+          providers: ["azure"],
+          allowRegistration: false,
+        }
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+
+  <Tab title="Apple">
+    <Steps>
+      <Step title="Configure Sign in with Apple">
+        1. In your **Apple Developer account**, go to **Certificates, Identifiers & Profiles → Identifiers**
+        2. Create a new **App ID** with the **Sign In with Apple** capability enabled
+        3. Create a **Services ID** and configure the redirect URL to:
+           ```
+           https://your-domain.com/api/auth/callback/apple
+           ```
+        4. Create a **Key** with the **Sign In with Apple** capability and download the `.p8` file
+      </Step>
+      <Step title="Set environment variables">
+        ```bash
+        AUTH_SECRET="your-random-secret"
+        AUTH_APPLE_ID="your-apple-services-id"
+        AUTH_APPLE_SECRET="your-generated-client-secret"
+        ```
+      </Step>
+      <Step title="Enable in config">
+        ```typescript
+        auth: {
+          providers: ["apple"],
+          allowRegistration: false,
+        }
+        ```
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Using multiple providers
+
+You can enable several providers at the same time. The login page will show a button for each.
+
+```typescript
+auth: {
+  providers: ["github", "google", "credentials"],
+  allowRegistration: true,
+}
+```
+
+Make sure all corresponding environment variables are set for every provider you enable.
+
+## Docker environment variable reference
+
+| Variable | Config path | Description | Default |
+|----------|-------------|-------------|---------|
+| `AUTH_SECRET` | — | Session signing secret | Auto-generated |
+| `PCHAT_AUTH_PROVIDERS` | `auth.providers` | Comma-separated provider list | `credentials` |
+| `PCHAT_ALLOW_REGISTRATION` | `auth.allowRegistration` | Allow public sign-up (`true`/`false`) | `true` |
+
+**Example with multiple providers via Docker:**
+
+```bash
+docker run -d \
+  --name prompts \
+  -p 4444:3000 \
+  -v prompts-data:/data \
+  -e AUTH_SECRET="$(openssl rand -base64 32)" \
+  -e PCHAT_AUTH_PROVIDERS="github,google" \
+  -e AUTH_GITHUB_ID="your-github-client-id" \
+  -e AUTH_GITHUB_SECRET="your-github-client-secret" \
+  -e AUTH_GOOGLE_ID="your-google-client-id" \
+  -e AUTH_GOOGLE_SECRET="your-google-client-secret" \
+  ghcr.io/f/prompts.chat
+```
+
+## Environment variable summary
+
+| Variable | Provider | Required |
+|----------|----------|----------|
+| `AUTH_SECRET` | All | Yes |
+| `AUTH_GITHUB_ID` | GitHub | Yes |
+| `AUTH_GITHUB_SECRET` | GitHub | Yes |
+| `AUTH_GOOGLE_ID` | Google | Yes |
+| `AUTH_GOOGLE_SECRET` | Google | Yes |
+| `AUTH_AZURE_AD_CLIENT_ID` | Azure AD | Yes |
+| `AUTH_AZURE_AD_CLIENT_SECRET` | Azure AD | Yes |
+| `AUTH_AZURE_AD_ISSUER` | Azure AD | Yes |
+| `AUTH_APPLE_ID` | Apple | Yes |
+| `AUTH_APPLE_SECRET` | Apple | Yes |

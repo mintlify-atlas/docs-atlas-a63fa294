@@ -1,0 +1,280 @@
+---
+title: "Configuration reference"
+description: "Full reference for all options available in prompts.config.ts."
+---
+
+All configuration for a self-hosted prompts.chat instance lives in a single file: `prompts.config.ts` at the root of your project. Use the `defineConfig()` helper to get full TypeScript autocompletion.
+
+```typescript
+import { defineConfig } from "@/lib/config";
+
+export default defineConfig({ /* ... */ });
+```
+
+## Complete example
+
+The following is a fully-annotated config showing every available option:
+
+```typescript
+import { defineConfig } from "@/lib/config";
+
+// Set to true to hide prompts.chat branding and use your own
+const useCloneBranding = true;
+
+export default defineConfig({
+  // Branding
+  branding: {
+    name: "Your Prompt Library",
+    logo: "/logo.svg",
+    logoDark: "/logo-dark.svg",
+    favicon: "/logo.svg",
+    description: "Collect, organize, and share AI prompts",
+    // Remove these when useCloneBranding is true
+    appStoreUrl: "https://apps.apple.com/...",
+    chromeExtensionUrl: "https://chromewebstore.google.com/...",
+  },
+
+  // Theme
+  theme: {
+    radius: "sm",       // "none" | "sm" | "md" | "lg"
+    variant: "default", // "flat" | "default" | "brutal"
+    density: "default", // "compact" | "default" | "comfortable"
+    colors: {
+      primary: "#6366f1",
+    },
+  },
+
+  // Authentication
+  auth: {
+    providers: ["github", "google", "apple"],
+    allowRegistration: false,
+  },
+
+  // Internationalization
+  i18n: {
+    locales: ["en", "tr", "es", "zh", "ja", "ar", "pt", "fr", "it", "de", "nl", "ko", "ru", "he", "el", "az", "fa"],
+    defaultLocale: "en",
+  },
+
+  // Features
+  features: {
+    privatePrompts: true,
+    changeRequests: true,
+    categories: true,
+    tags: true,
+    aiSearch: false,      // requires OPENAI_API_KEY
+    aiGeneration: false,  // requires OPENAI_API_KEY
+    mcp: false,
+    comments: true,
+  },
+
+  // Homepage
+  homepage: {
+    useCloneBranding,
+    achievements: {
+      enabled: !useCloneBranding,
+    },
+    sponsors: {
+      enabled: !useCloneBranding,
+      items: [],
+    },
+  },
+});
+```
+
+---
+
+## `branding`
+
+Controls the visual identity of your instance.
+
+<ParamField path="branding.name" type="string" required>
+  The display name of your application. Shown in the header, page titles, and metadata.
+</ParamField>
+
+<ParamField path="branding.logo" type="string" required>
+  Path to your logo file relative to `public/`. SVG is recommended. Example: `"/logo.svg"`.
+</ParamField>
+
+<ParamField path="branding.logoDark" type="string">
+  Path to an alternate logo shown in dark mode. Falls back to `logo` if not set.
+</ParamField>
+
+<ParamField path="branding.favicon" type="string" required>
+  Path to the favicon file relative to `public/`. Example: `"/logo.svg"`.
+</ParamField>
+
+<ParamField path="branding.description" type="string" required>
+  A short description of your instance. Used in the homepage hero and `<meta>` tags.
+</ParamField>
+
+<ParamField path="branding.appStoreUrl" type="string">
+  Optional link to your App Store listing. Only shown when `useCloneBranding` is `false`.
+</ParamField>
+
+<ParamField path="branding.chromeExtensionUrl" type="string">
+  Optional link to your Chrome Web Store extension. Only shown when `useCloneBranding` is `false`.
+</ParamField>
+
+---
+
+## `theme`
+
+Configures the design system for your instance.
+
+<ParamField path="theme.radius" type="'none' | 'sm' | 'md' | 'lg'" required>
+  Global border radius applied to cards, buttons, and inputs.
+
+  | Value | Effect |
+  |-------|--------|
+  | `none` | Sharp corners |
+  | `sm` | Slightly rounded (default) |
+  | `md` | Moderately rounded |
+  | `lg` | Heavily rounded |
+</ParamField>
+
+<ParamField path="theme.variant" type="'flat' | 'default' | 'brutal'" required>
+  The overall UI style.
+
+  | Value | Effect |
+  |-------|--------|
+  | `flat` | Minimal, borderless surfaces |
+  | `default` | Standard shadowed surfaces |
+  | `brutal` | High-contrast, bold borders |
+</ParamField>
+
+<ParamField path="theme.density" type="'compact' | 'default' | 'comfortable'" required>
+  Controls spacing throughout the UI.
+</ParamField>
+
+<ParamField path="theme.colors.primary" type="string" required>
+  The primary brand color as a hex value or CSS `oklch()` string. Example: `"#6366f1"`.
+</ParamField>
+
+---
+
+## `auth`
+
+Configures which authentication providers are active.
+
+<ParamField path="auth.providers" type="string[]" required>
+  Array of provider IDs to enable. Supported values: `"credentials"`, `"github"`, `"google"`, `"azure"`, `"apple"`.
+
+  ```typescript
+  auth: {
+    providers: ["github", "google"],
+  }
+  ```
+</ParamField>
+
+<ParamField path="auth.allowRegistration" type="boolean" required>
+  When `true`, new users can register via the `credentials` provider. Has no effect on OAuth providers.
+</ParamField>
+
+---
+
+## `i18n`
+
+Sets up supported languages.
+
+<ParamField path="i18n.locales" type="string[]" required>
+  List of locale codes your instance supports. Must each have a corresponding file in `messages/`.
+
+  All 17 built-in locales: `en`, `tr`, `es`, `zh`, `ja`, `ar`, `pt`, `fr`, `it`, `de`, `nl`, `ko`, `ru`, `he`, `el`, `az`, `fa`.
+</ParamField>
+
+<ParamField path="i18n.defaultLocale" type="string" required>
+  The locale used when no preference can be determined. Must be a member of `locales`.
+</ParamField>
+
+---
+
+## `features`
+
+Boolean flags that enable or disable platform features.
+
+<ParamField path="features.privatePrompts" type="boolean" required>
+  Allows users to create prompts visible only to themselves.
+</ParamField>
+
+<ParamField path="features.changeRequests" type="boolean" required>
+  Enables the versioning and change request system (similar to pull requests for prompts).
+</ParamField>
+
+<ParamField path="features.categories" type="boolean" required>
+  Enables prompt categories and category browsing pages.
+</ParamField>
+
+<ParamField path="features.tags" type="boolean" required>
+  Enables prompt tags and tag browsing pages.
+</ParamField>
+
+<ParamField path="features.aiSearch" type="boolean">
+  Enables AI-powered semantic search. Requires `OPENAI_API_KEY` to be set. Defaults to `false`.
+</ParamField>
+
+<ParamField path="features.aiGeneration" type="boolean">
+  Enables AI-assisted prompt generation. Requires `OPENAI_API_KEY` to be set. Defaults to `false`.
+</ParamField>
+
+<ParamField path="features.mcp" type="boolean">
+  Enables the MCP (Model Context Protocol) server and API key generation for users. Defaults to `false`.
+</ParamField>
+
+<ParamField path="features.comments" type="boolean">
+  Enables comments on prompts. Defaults to `true`.
+</ParamField>
+
+---
+
+## `homepage`
+
+Controls what is displayed on the public homepage.
+
+<ParamField path="homepage.useCloneBranding" type="boolean">
+  When `true`, the homepage uses your custom branding instead of prompts.chat's default hero content. See [Clone branding mode](#clone-branding-mode) below.
+</ParamField>
+
+<ParamField path="homepage.achievements.enabled" type="boolean">
+  Show or hide the achievements section (GitHub stars, press mentions). Automatically disabled when `useCloneBranding` is `true`.
+</ParamField>
+
+<ParamField path="homepage.sponsors.enabled" type="boolean">
+  Show or hide the sponsors section. Automatically disabled when `useCloneBranding` is `true`.
+</ParamField>
+
+<ParamField path="homepage.sponsors.items" type="Sponsor[]">
+  Array of sponsor objects to display. Each item has `name`, `logo`, `url`, and optional `darkLogo` and `className`.
+</ParamField>
+
+---
+
+## Clone branding mode
+
+Set `useCloneBranding = true` at the top of `prompts.config.ts` to switch your instance into white-label mode. When active, the homepage:
+
+- Displays your `branding.name` as the hero title
+- Shows your `branding.description` as the subtitle
+- Renders your logo as a background watermark instead of the default video
+- Hides the "Deploy Your Private Server" call-to-action
+- Hides the achievements section (Forbes mentions, GitHub star counts)
+- Hides the sponsors section and "Become a Sponsor" link
+
+This is the recommended setting for any organization deploying prompts.chat as an internal or white-labeled tool.
+
+```typescript
+const useCloneBranding = true;
+
+export default defineConfig({
+  // ...
+  homepage: {
+    useCloneBranding,
+    achievements: { enabled: !useCloneBranding }, // false
+    sponsors:     { enabled: !useCloneBranding, items: [] }, // false
+  },
+});
+```
+
+<Note>
+  When using Docker, setting any `PCHAT_NAME` environment variable automatically activates clone branding mode — you do not need to edit `prompts.config.ts`.
+</Note>

@@ -1,0 +1,147 @@
+---
+title: "Updating"
+description: "How to update your self-hosted prompts.chat instance to the latest version."
+---
+
+<Warning>
+  Always run database migrations before starting the updated application. Starting with pending migrations will cause runtime errors.
+</Warning>
+
+<Tabs>
+  <Tab title="Docker">
+    The Docker image includes the full application. Pull the latest image, replace the container, and your data persists in the mounted volume.
+
+    <Steps>
+      <Step title="Pull the latest image">
+        ```bash
+        docker pull ghcr.io/f/prompts.chat
+        ```
+      </Step>
+
+      <Step title="Stop and remove the existing container">
+        Removing the container does **not** delete your data. The volume (`prompts-data`) is retained.
+
+        ```bash
+        docker stop prompts && docker rm prompts
+        ```
+      </Step>
+
+      <Step title="Start a new container">
+        Re-run with the same volume mount and environment variables you used originally:
+
+        ```bash
+        docker run -d \
+          --name prompts \
+          -p 4444:3000 \
+          -v prompts-data:/data \
+          -e AUTH_SECRET="your-secret-key" \
+          ghcr.io/f/prompts.chat
+        ```
+
+        Migrations are applied automatically on startup.
+      </Step>
+
+      <Step title="Verify the update">
+        Check that the container started successfully:
+
+        ```bash
+        docker logs -f prompts
+        ```
+
+        Confirm the health endpoint responds:
+
+        ```bash
+        curl http://localhost:4444/api/health
+        ```
+      </Step>
+    </Steps>
+
+    <Note>
+      Data stored in the `/data` volume — including the PostgreSQL database — is preserved across container replacements. Never use `docker volume rm` unless you intend to wipe all data.
+    </Note>
+  </Tab>
+
+  <Tab title="Manual">
+    For instances deployed from source, pull the latest code, install dependencies, apply migrations, and rebuild.
+
+    <Steps>
+      <Step title="Pull the latest changes">
+        ```bash
+        git pull origin main
+        ```
+      </Step>
+
+      <Step title="Install updated dependencies">
+        ```bash
+        npm install
+        ```
+
+        This also regenerates the Prisma client via the `postinstall` hook.
+      </Step>
+
+      <Step title="Apply pending migrations">
+        <Warning>
+          Run this step before starting the app. Do not skip it.
+        </Warning>
+
+        ```bash
+        npm run db:deploy
+        ```
+      </Step>
+
+      <Step title="Rebuild and restart">
+        <CodeGroup>
+
+        ```bash Production
+        npm run build && npm run start
+        ```
+
+        ```bash With PM2
+        npm run build && pm2 restart prompts
+        ```
+
+        ```bash With systemd
+        npm run build && sudo systemctl restart prompts
+        ```
+
+        </CodeGroup>
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
+
+## Database migrations during updates
+
+Each release may include new Prisma migrations in `prisma/migrations/`. The `db:deploy` command compares the migration history in your database against the migration files on disk and applies only the ones that are new.
+
+```bash
+# Safe to run on every update — no-op when nothing is pending
+npm run db:deploy
+```
+
+To check which migrations have already been applied:
+
+```bash
+npx prisma migrate status
+```
+
+## Data safety
+
+<Columns cols={2}>
+  <Card title="Docker volumes" icon="database">
+    Volumes persist even when the container is stopped or removed. Your database is safe as long as you do not run `docker volume rm`.
+  </Card>
+  <Card title="Back up before updating" icon="shield-check">
+    Take a database backup before every update in case a rollback is needed.
+  </Card>
+</Columns>
+
+```bash
+# Back up before updating (Docker)
+docker exec prompts pg_dump -U prompts prompts > pre-update-backup.sql
+
+# Back up before updating (external PostgreSQL)
+pg_dump -h host -U user -d dbname -f pre-update-backup.sql
+```
+
+See [Database — backup and restore](/self-hosting/database#backup-and-restore) for full details.

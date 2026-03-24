@@ -1,122 +1,123 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "prompts.chat",
+  "theme": "almond",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#040404",
+    "light": "#7c7c7c",
+    "dark": "#cdcdcd"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/ee0e80df-89f2-4bbd-a4e1-a428fc0f44a8.svg",
+  "logo": {
+    "light": "https://media.brand.dev/9c3f829a-6c72-4eb3-a474-391c59066441.svg",
+    "dark": "https://media.brand.dev/9c3f829a-6c72-4eb3-a474-391c59066441.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/f/prompts.chat"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/f/prompts.chat"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Getting Started",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Overview",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "introduction",
+              "quickstart"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Features",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
+              "features/browsing-prompts",
+              "features/creating-prompts",
+              "features/collections",
+              "features/change-requests",
+              "features/prompt-types",
+              "features/ai-search"
             ]
           },
           {
-            "group": "Writing content",
+            "group": "Integrations",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "integrations/mcp-server",
+              "integrations/claude-plugin",
+              "integrations/cli"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "Self-Hosting",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Deployment",
             "pages": [
-              "api-reference/introduction"
+              "self-hosting/overview",
+              "self-hosting/quickstart",
+              "self-hosting/docker",
+              "self-hosting/manual-setup"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Configuration",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "self-hosting/configuration",
+              "self-hosting/branding",
+              "self-hosting/authentication",
+              "self-hosting/features",
+              "self-hosting/internationalization"
+            ]
+          },
+          {
+            "group": "Operations",
+            "pages": [
+              "self-hosting/environment-variables",
+              "self-hosting/database",
+              "self-hosting/security",
+              "self-hosting/updating"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": [
+              "api/overview",
+              "api/authentication"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/prompts",
+              "api/categories",
+              "api/tags",
+              "api/users",
+              "api/search"
+            ]
+          },
+          {
+            "group": "MCP Protocol",
+            "pages": [
+              "api/mcp-overview",
+              "api/mcp-tools"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }
